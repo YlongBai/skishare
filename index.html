@@ -77,6 +77,8 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .card-body{padding:10px}
 .card-title{font-size:13px;font-weight:700;line-height:1.4;margin-bottom:5px;color:var(--text)}
 .card-desc{font-size:11px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+.card-price{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:5px}
+.card-meta{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:8px}
 .card-foot{display:flex;align-items:center;gap:6px}
 .av-xs{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
 .av-xs img,.av-sm img,.av-md img,.av-lg img{width:100%;height:100%;object-fit:cover}
@@ -338,6 +340,9 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
     </div>
     <div id="secondhandF" class="hidden">
       <div class="form-g"><label class="form-l">二手分类</label><select class="form-s" id="pubSubcategory"><option value="">选择分类</option><option value="snowboard">单板</option><option value="ski">双板</option><option value="clothing">雪服</option><option value="helmet">头盔</option><option value="goggles">雪镜</option><option value="boots">雪鞋</option><option value="bindings">固定器</option><option value="other">其他</option></select></div>
+      <div class="form-g"><label class="form-l">价格（AUD）</label><input class="form-i" type="number" min="0" step="1" id="pubPrice" placeholder="例如 350"></div>
+      <div class="form-g"><label class="form-l">新旧程度</label><select class="form-s" id="pubCondition"><option value="">选择新旧程度</option><option value="new">全新</option><option value="like_new">95新</option><option value="excellent">9新</option><option value="good">8新</option><option value="used">有使用痕迹</option><option value="other">其他</option></select></div>
+      <div class="form-g"><label class="form-l">所在城市</label><select class="form-s" id="pubCity"><option value="">选择城市</option><option value="Sydney">Sydney</option><option value="Melbourne">Melbourne</option><option value="Canberra">Canberra</option><option value="Jindabyne">Jindabyne</option><option value="Brisbane">Brisbane</option><option value="Adelaide">Adelaide</option><option value="Perth">Perth</option><option value="Hobart">Hobart</option><option value="Other">其他</option></select></div>
     </div>
     <div id="locationF" class="hidden"><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
     <div id="contactF"><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
@@ -442,6 +447,7 @@ const MAX_IMAGE_SIZE=10*1024*1024
 const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp']
 
 const SECONDHAND_CATS={snowboard:'单板',ski:'双板',clothing:'雪服',helmet:'头盔',goggles:'雪镜',boots:'雪鞋',bindings:'固定器',other:'其他'}
+const SECONDHAND_CONDITIONS={new:'全新',like_new:'95新',excellent:'9新',good:'8新',used:'有使用痕迹',other:'其他'}
 const TABS=[{l:'推荐',v:'all'},{l:'雪友同行',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
 const TYPES=[{l:'雪友同行',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
 const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
@@ -545,6 +551,7 @@ function mkCard(p){
     </div>
     <div class="card-body">
       <div class="card-title">${safe(p.title||'')}</div>
+      ${p.type==='secondhand'?`<div class="card-price">${fmtPrice(p.price)}</div><div class="card-meta">${[SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(safe).join(' · ')}</div>`:''}
       <div class="card-desc">${safe(p.content||'')}</div>
       <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
         <div class="av-xs">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
@@ -598,6 +605,12 @@ async function openPost(id){
         ${p.departure?`<div class="trip-row">📍 ${safe(p.departure)}</div>`:''}
         ${p.resort?`<div class="trip-row">🎿 ${safe(p.resort)}</div>`:''}
         ${p.seats_left?`<div class="trip-row">👥 缺 ${safe(p.seats_left)} 人</div>`:''}
+      </div>`:''}
+      ${p.type==='secondhand'?`<div class="trip-box">
+        <div class="trip-row">💰 ${fmtPrice(p.price)}</div>
+        ${p.subcategory?`<div class="trip-row">🎿 ${safe(SECONDHAND_CATS[p.subcategory]||'二手')}</div>`:''}
+        ${p.item_condition?`<div class="trip-row">✨ ${safe(SECONDHAND_CONDITIONS[p.item_condition]||p.item_condition)}</div>`:''}
+        ${p.city?`<div class="trip-row">📍 ${safe(p.city)}</div>`:''}
       </div>`:''}
       <div class="detail-content">${safe(p.content||'暂无内容')}</div>
       ${p.contact?`<div class="contact-box" onclick="revealContact(this,'${jsStr(p.contact)}')">
@@ -841,7 +854,14 @@ async function submitPost(){
   const content=document.getElementById('pubContent').value.trim()
   if(content.length>2000){showToast('内容最多2000字');return}
   const subcategory=document.getElementById('pubSubcategory')?.value||''
+  const priceRaw=document.getElementById('pubPrice')?.value||''
+  const price=priceRaw===''?null:Number(priceRaw)
+  const itemCondition=document.getElementById('pubCondition')?.value||''
+  const city=document.getElementById('pubCity')?.value||''
   if(pubType==='secondhand'&&!subcategory){showToast('请选择二手分类');return}
+  if(pubType==='secondhand'&&(price===null||Number.isNaN(price)||price<0)){showToast('请输入有效价格');return}
+  if(pubType==='secondhand'&&!itemCondition){showToast('请选择新旧程度');return}
+  if(pubType==='secondhand'&&!city){showToast('请选择所在城市');return}
   for(const f of selImgs){
     if(!ALLOWED_IMAGE_TYPES.includes(f.type)||f.size>MAX_IMAGE_SIZE){showToast('图片格式或大小不符合要求');return}
   }
@@ -859,6 +879,9 @@ async function submitPost(){
   const{error}=await db.from('posts').insert({
     user_id:me.id,user_name:me.prof?.name||me.email.split('@')[0],user_avatar:me.prof?.avatar||null,
     type:pubType,title,content,images:urls,subcategory,
+    price:pubType==='secondhand'?price:null,
+    item_condition:pubType==='secondhand'?itemCondition:null,
+    city:pubType==='secondhand'?city:null,
     contact:document.getElementById('pubContact')?.value.trim()||'',
     location:document.getElementById('pubLocation')?.value.trim()||'',
     resort:document.getElementById('pubResort')?.value||'',
@@ -871,6 +894,9 @@ async function submitPost(){
   showToast('发布成功！');selImgs=[];renderImgGrid()
   document.getElementById('pubTitle').value='';document.getElementById('pubContent').value=''
   const subSel=document.getElementById('pubSubcategory');if(subSel)subSel.value=''
+  const priceInput=document.getElementById('pubPrice');if(priceInput)priceInput.value=''
+  const conditionInput=document.getElementById('pubCondition');if(conditionInput)conditionInput.value=''
+  const cityInput=document.getElementById('pubCity');if(cityInput)cityInput.value=''
   showPg('home');loadPosts()
 }
 
@@ -1207,6 +1233,14 @@ async function sharePost(id,title){
   }catch(e){
     if(e?.name!=='AbortError')showToast('分享失败')
   }
+}
+
+
+function fmtPrice(v){
+  if(v===null||v===undefined||v==='')return'价格面议'
+  const n=Number(v)
+  if(Number.isNaN(n))return safe(String(v))
+  return '$'+Math.round(n).toLocaleString('en-AU')
 }
 
 // ===== EDIT POST =====
