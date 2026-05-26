@@ -456,15 +456,26 @@ function chTab(v){curTab=v;offset=0;posts=[];renderTabs();loadPosts()}
 // LOAD POSTS
 async function loadPosts(){
   const el=document.getElementById('feedGrid')
-  if(offset===0)el.innerHTML='<div class="empty"><div class="empty-icon">❄️</div>加载中...</div>'
+  const kw=document.getElementById('searchInput')?.value.trim()||''
   if(offset===0){
     const col=Array(3).fill(`<div class="skel-card"><div class="skel skel-img"></div><div class="skel skel-line"></div><div class="skel skel-line short"></div></div>`).join('')
-    document.getElementById('feedGrid').innerHTML=`<div class="grid"><div class="col">${col}</div><div class="col">${col}</div></div>`
+    el.innerHTML=`<div class="grid"><div class="col">${col}</div><div class="col">${col}</div></div>`
   }
   let q=db.from('posts').select('*').order('pinned',{ascending:false}).order('created_at',{ascending:false})
-  if(kw)q=db.from('posts').select('*').or(`title.ilike.%${kw}%,content.ilike.%${kw}%,resort.ilike.%${kw}%,departure.ilike.%${kw}%`).order('created_at',{ascending:false})
-  else if(curTab!=='all')q=q.eq('type',curTab)
-  const{data}=await q.range(offset,offset+pgSize-1)
+  if(kw){
+    const safeKw=kw.replace(/[,%]/g,'').slice(0,50)
+    addSearchHistory(safeKw)
+    q=db.from('posts').select('*').or(`title.ilike.%${safeKw}%,content.ilike.%${safeKw}%,resort.ilike.%${safeKw}%,departure.ilike.%${safeKw}%`).order('created_at',{ascending:false})
+  }else if(curTab!=='all'){
+    q=q.eq('type',curTab)
+  }
+  const{data,error}=await q.range(offset,offset+pgSize-1)
+  if(error){
+    console.error(error)
+    el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>加载失败，请稍后重试</div>'
+    document.getElementById('loadMoreBtn').classList.add('hidden')
+    return
+  }
   const rows=data||[]
   if(offset===0)posts=rows;else posts=[...posts,...rows]
   more=rows.length===pgSize
@@ -486,16 +497,16 @@ function mkCard(p){
   const init=(p.user_name||'雪')[0]
   return`<div class="card" onclick="openPost('${p.id}')">
     <div class="card-img-wrap">
-      ${cover?`<img class="card-img" src="${cover}" loading="lazy">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
+      ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
       ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
     </div>
     <div class="card-body">
-      <div class="card-title">${p.title||''}</div>
-      <div class="card-desc">${p.content||''}</div>
-      <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${esc(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
-        <div class="av-xs">${p.user_avatar?`<img src="${p.user_avatar}">`:(p.user_name||'雪')[0]}</div>
-        <span class="uname">${p.user_name||'雪友'}</span>
+      <div class="card-title">${safe(p.title||'')}</div>
+      <div class="card-desc">${safe(p.content||'')}</div>
+      <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
+        <div class="av-xs">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
+        <span class="uname">${safe(p.user_name||'雪友')}</span>
       </div>
     </div>
   </div>`
@@ -522,17 +533,17 @@ async function openPost(id){
     ${imgs.length?`
       <div class="img-slider" id="slider">
         <div class="img-slider-inner" id="sliderInner">
-          ${imgs.map((src,i)=>`<div class="img-slide"><img src="${src}" onclick="openViewer(${i})" data-imgs='${JSON.stringify(imgs)}' style="cursor:zoom-in"></div>`).join('')}
+          ${imgs.map((src,i)=>`<div class="img-slide"><img src="${urlOk(src)}" onclick="openViewer(${i})" data-imgs='${attr(JSON.stringify(imgs.map(urlOk).filter(Boolean)))}' style="cursor:zoom-in" alt="帖子图片"></div>`).join('')}
         </div>
         ${imgs.length>1?`<div class="slider-dots" id="sliderDots">${imgs.map((_,i)=>`<div class="dot ${i===0?'on':''}"></div>`).join('')}</div>`:''}
       </div>`
     :`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}" style="height:200px;font-size:60px">${EMOJI[p.type]||'🎿'}</div>`}
     <div class="${imgs.length?'detail-body':'detail-body-noimg'}">
-      <div class="detail-title">${p.title||'未命名帖子'}</div>
+      <div class="detail-title">${safe(p.title||'未命名帖子')}</div>
       <div class="detail-author">
-        <div class="av-md" style="cursor:pointer" onclick="openProfile('${p.user_id}','${esc(p.user_name||'雪友')}','${p.user_avatar||''}')">${p.user_avatar?`<img src="${p.user_avatar}">`:(p.user_name||'雪')[0]}</div>
-        <div style="flex:1;cursor:pointer" onclick="openProfile('${p.user_id}','${esc(p.user_name||'雪友')}','${p.user_avatar||''}')">
-          <div style="font-weight:700;font-size:14px">${p.user_name||'雪友'}</div>
+        <div class="av-md" style="cursor:pointer" onclick="openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
+        <div style="flex:1;cursor:pointer" onclick="openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')">
+          <div style="font-weight:700;font-size:14px">${safe(p.user_name||'雪友')}</div>
           <div style="font-size:12px;color:var(--muted)">${fmtTime(p.created_at)}</div>
         </div>
         <div style="display:flex;gap:6px">
@@ -541,20 +552,20 @@ async function openPost(id){
         </div>
       </div>
       ${p.type==='carpool'?`<div class="trip-box">
-        ${p.trip_date?`<div class="trip-row">📅 ${p.trip_date}</div>`:''}
-        ${p.departure?`<div class="trip-row">📍 ${p.departure}</div>`:''}
-        ${p.resort?`<div class="trip-row">🎿 ${p.resort}</div>`:''}
-        ${p.seats_left?`<div class="trip-row">👥 缺 ${p.seats_left} 人</div>`:''}
+        ${p.trip_date?`<div class="trip-row">📅 ${safe(p.trip_date)}</div>`:''}
+        ${p.departure?`<div class="trip-row">📍 ${safe(p.departure)}</div>`:''}
+        ${p.resort?`<div class="trip-row">🎿 ${safe(p.resort)}</div>`:''}
+        ${p.seats_left?`<div class="trip-row">👥 缺 ${safe(p.seats_left)} 人</div>`:''}
       </div>`:''}
-      <div class="detail-content">${p.content||'暂无内容'}</div>
-      ${p.contact?`<div class="contact-box" onclick="revealContact(this,'${esc(p.contact)}')">
+      <div class="detail-content">${safe(p.content||'暂无内容')}</div>
+      ${p.contact?`<div class="contact-box" onclick="revealContact(this,'${jsStr(p.contact)}')">
         <div class="contact-label">联系方式</div>
         <div class="contact-dots">••••••••</div>
         <div class="contact-hint">点击查看</div>
       </div>`:''}
       <div class="action-row">
         <button class="act-btn ${isFav?'on':''}" id="favBtn" onclick="toggleFav('${p.id}',${isFav})">${isFav?'⭐ 已收藏':'☆ 收藏'}</button>
-        <button class="act-btn" onclick="sharePost('${p.id}','${esc(p.title||'')}')">↗ 分享</button>
+        <button class="act-btn" onclick="sharePost('${p.id}','${jsStr(p.title||'')}')">↗ 分享</button>
         ${isOwner?`<button class="act-btn" onclick="editPost('${p.id}')">✏️ 编辑</button>`:''}
         ${isOwner&&p.type==='secondhand'?`<button class="act-btn ${p.sold?'on':''}" onclick="toggleSold('${p.id}',${p.sold})">${p.sold?'✅ 已售出':'标记售出'}</button>`:''}
         ${!isOwner?`<button class="act-btn red" onclick="reportPost('${p.id}')">⚑ 举报</button>`:''}
@@ -595,24 +606,24 @@ function mkCmt(c,rootId){
   const isMe=me&&me.id===c.user_id
   const init=(c.user_name||'雪')[0]
   return`<div class="cmt">
-    <div class="av-sm">${c.user_avatar?`<img src="${c.user_avatar}">`:init}</div>
+    <div class="av-sm">${urlOk(c.user_avatar)?`<img src="${urlOk(c.user_avatar)}" alt="头像">`:init}</div>
     <div class="cmt-body">
-      <div class="cmt-name">${c.user_name||'雪友'}</div>
-      <div class="cmt-text">${c.content}</div>
+      <div class="cmt-name">${safe(c.user_name||'雪友')}</div>
+      <div class="cmt-text">${safe(c.content)}</div>
       <div class="cmt-meta">
         <span class="cmt-time">${fmtTime(c.created_at)}</span>
-        <button class="cmt-btn" onclick="replyTo('${c.id}','${esc(c.user_name||'雪友')}','${rootId||c.id}')">回复</button>
+        <button class="cmt-btn" onclick="replyTo('${c.id}','${jsStr(c.user_name||'雪友')}','${rootId||c.id}')">回复</button>
         ${isMe?`<button class="cmt-del" onclick="delCmt('${c.id}')">删除</button>`:''}
       </div>
       ${c.replies&&c.replies.length?`<div class="replies">${c.replies.map(r=>`
         <div class="reply">
-          <div class="av-xs" style="width:22px;height:22px">${r.user_avatar?`<img src="${r.user_avatar}">`:(r.user_name||'雪')[0]}</div>
+          <div class="av-xs" style="width:22px;height:22px">${urlOk(r.user_avatar)?`<img src="${urlOk(r.user_avatar)}" alt="头像">`:(r.user_name||'雪')[0]}</div>
           <div class="cmt-body">
-            <div class="cmt-name" style="font-size:12px">${r.user_name||'雪友'}${r.reply_to_user_name?` <span style="color:var(--muted);font-weight:400;font-size:11px">回复 ${r.reply_to_user_name}</span>`:''}</div>
-            <div class="cmt-text" style="font-size:13px">${r.content}</div>
+            <div class="cmt-name" style="font-size:12px">${safe(r.user_name||'雪友')}${r.reply_to_user_name?` <span style="color:var(--muted);font-weight:400;font-size:11px">回复 ${safe(r.reply_to_user_name)}</span>`:''}</div>
+            <div class="cmt-text" style="font-size:13px">${safe(r.content)}</div>
             <div class="cmt-meta">
               <span class="cmt-time">${fmtTime(r.created_at)}</span>
-              <button class="cmt-btn" onclick="replyTo('${r.id}','${esc(r.user_name||'雪友')}','${c.id}')">回复</button>
+              <button class="cmt-btn" onclick="replyTo('${r.id}','${jsStr(r.user_name||'雪友')}','${c.id}')">回复</button>
               ${me&&me.id===r.user_id?`<button class="cmt-del" onclick="delCmt('${r.id}')">删除</button>`:''}
             </div>
           </div>
@@ -624,7 +635,7 @@ function mkCmt(c,rootId){
 function replyTo(cid,name,rootId){
   replyId=rootId||cid;replyName=name
   document.getElementById('replyHint').classList.remove('hidden')
-  document.getElementById('replyHintTxt').textContent=`回复 ${name}`
+  document.getElementById('replyHintTxt').textContent=`回复 ${safe(name)}`
   document.getElementById('cmtInput').focus()
 }
 function cancelReply(){replyId=null;replyName=null;document.getElementById('replyHint').classList.add('hidden')}
@@ -684,13 +695,14 @@ async function delPost(id){
 function reportPost(){showToast('举报已提交，感谢反馈')}
 
 function revealContact(el,contact){
-  el.innerHTML=`<div class="contact-label">联系方式</div><div class="contact-val">${contact}</div>`
+  el.innerHTML=`<div class="contact-label">联系方式</div><div class="contact-val">${safe(contact)}</div>`
 }
 
 // IMAGE VIEWER
 function openViewer(idx){
   const imgEl=event.target
-  const imgs=JSON.parse(imgEl.getAttribute('data-imgs')||'[]')
+  let imgs=[]
+  try{imgs=JSON.parse(imgEl.getAttribute('data-imgs')||'[]')}catch{imgs=[]}
   if(!imgs.length)return
   viewerImgs=imgs;viewerIdx=idx
   const el=document.getElementById('imgViewer')
@@ -823,7 +835,7 @@ async function doAuth(){
     const{data,error}=await db.auth.signInWithPassword({email,password:pwd})
     if(error){showToast('登录失败：'+error.message);btn.textContent='登录';btn.disabled=false;return}
     if(data.user){
-      const{data:ex}=await db.from('profiles').select('id').eq('id',data.user.id).single()
+      const{data:ex}=await db.from('profiles').select('id').eq('id',data.user.id).maybeSingle()
       if(!ex)await db.from('profiles').insert({id:data.user.id,name:email.split('@')[0]})
     }
   }else{
@@ -842,16 +854,17 @@ async function loadNotifs(){
   if(!me)return
   const el=document.getElementById('notifList')
   el.innerHTML='<div class="empty">加载中...</div>'
-  const{data}=await db.from('notifications').select('*').eq('user_id',me.id).order('created_at',{ascending:false}).limit(50)
+  const{data,error}=await db.from('notifications').select('*').eq('user_id',me.id).order('created_at',{ascending:false}).limit(50)
+  if(error){console.error(error);el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>通知加载失败</div>';return}
   if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔔</div>暂无通知</div>';return}
   await db.from('notifications').update({is_read:true}).eq('user_id',me.id).eq('is_read',false)
   document.getElementById('notifBadge').classList.add('hidden')
   el.innerHTML=data.map(n=>`<div class="notif-item" onclick="${n.post_id?`openPost('${n.post_id}')`:''}" >
-    <div class="av-sm">${n.sender_avatar?`<img src="${n.sender_avatar}">`:(n.sender_name||'雪')[0]}</div>
+    <div class="av-sm">${urlOk(n.sender_avatar)?`<img src="${urlOk(n.sender_avatar)}" alt="头像">`:(n.sender_name||'雪')[0]}</div>
     <div class="notif-body">
-      <div class="notif-name">${n.sender_name||'雪友'} <span style="font-weight:400;color:var(--text)">${n.type==='reply'?'回复了你的评论':'评论了你的帖子'}</span></div>
-      <div class="notif-text">${n.content||''}</div>
-      ${n.post_title?`<div class="notif-post">《${n.post_title}》</div>`:''}
+      <div class="notif-name">${safe(n.sender_name||'雪友')} <span style="font-weight:400;color:var(--text)">${n.type==='reply'?'回复了你的评论':'评论了你的帖子'}</span></div>
+      <div class="notif-text">${safe(n.content||'')}</div>
+      ${n.post_title?`<div class="notif-post">《${safe(n.post_title)}》</div>`:''}
       <div class="notif-time">${fmtTime(n.created_at)}</div>
     </div>
     ${!n.is_read?'<div class="notif-dot"></div>':''}
@@ -877,10 +890,10 @@ function renderMine(){
   const p=me.prof,name=p?.name||me.email.split('@')[0]
   el.innerHTML=`
     <div class="mine-hero">
-      <div class="av-lg" style="cursor:pointer" onclick="document.getElementById('avInput').click()">${p?.avatar?`<img src="${p.avatar}">`:name[0]}</div>
+      <div class="av-lg" style="cursor:pointer" onclick="document.getElementById('avInput').click()">${urlOk(p?.avatar)?`<img src="${urlOk(p.avatar)}" alt="头像">`:name[0]}</div>
       <div class="mine-info">
-        <div class="mine-name">${name}</div>
-        <div class="mine-email">${maskEmail(me.email)}</div>
+        <div class="mine-name">${safe(name)}</div>
+        <div class="mine-email">${safe(maskEmail(me.email))}</div>
         <div class="mine-edit-av" onclick="document.getElementById('avInput').click()">点击更换头像</div>
       </div>
     </div>
@@ -935,7 +948,7 @@ async function signOut(){await db.auth.signOut();me=null;updateNav();showPg('hom
 async function openProfile(uid,name,avatar){
   prevPg=curPg;showPg('profile')
   const el=document.getElementById('profileWrap')
-  el.innerHTML=`<div class="profile-hero"><div class="av-lg">${avatar?`<img src="${avatar}">`:name[0]}</div><div class="profile-name">${name}</div></div><div id="profPosts" style="padding:10px"><div class="empty">加载中...</div></div>`
+  el.innerHTML=`<div class="profile-hero"><div class="av-lg">${urlOk(avatar)?`<img src="${urlOk(avatar)}" alt="头像">`:name[0]}</div><div class="profile-name">${safe(name)}</div></div><div id="profPosts" style="padding:10px"><div class="empty">加载中...</div></div>`
   const{data}=await db.from('posts').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(50)
   const ps=data||[]
   const el2=document.getElementById('profPosts')
@@ -972,7 +985,11 @@ function requireAuth(fn){if(!me){showPg('auth','login');return}fn()}
 
 // UTILS
 function fmtTime(ts){if(!ts)return'';const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()}`}
-function esc(s){return(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+function safe(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function attr(s){return safe(s).replace(/`/g,'&#096;')}
+function jsStr(s){return String(s??'').replace(/\/g,'\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n').replace(/\r/g,'')}
+function urlOk(u){try{const x=new URL(String(u));return ['http:','https:'].includes(x.protocol)?x.href:''}catch{return''}}
+function safeInit(s){return safe((String(s||'雪').trim()[0])||'雪')}
 function showToast(msg){const e=document.createElement('div');e.className='toast';e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),2500)}
 
 setInterval(()=>{if(me)checkUnread()},30000)
@@ -1008,7 +1025,7 @@ function showSkeleton(){
 }
 
 // ===== SEARCH HISTORY =====
-function getSearchHistory(){return JSON.parse(localStorage.getItem('searchHistory')||'[]')}
+function getSearchHistory(){try{return JSON.parse(localStorage.getItem('searchHistory')||'[]')}catch{return[]}}
 function addSearchHistory(kw){
   if(!kw.trim())return
   let h=getSearchHistory().filter(x=>x!==kw)
@@ -1020,12 +1037,12 @@ function showSearchHistory(){
   const el=document.getElementById('searchHistory')
   const kw=document.getElementById('searchInput').value.trim()
   if(!h.length||kw){el.classList.add('hidden');return}
-  el.innerHTML=h.map(x=>`<div class="sh-item" onclick="useHistory('${esc(x)}')">🕐 ${x}</div>`).join('')+`<div class="sh-clear" onclick="clearHistory()">清除搜索历史</div>`
+  el.innerHTML=h.map(x=>`<div class="sh-item" onclick="useHistory('${jsStr(x)}')">🕐 ${safe(x)}</div>`).join('')+`<div class="sh-clear" onclick="clearHistory()">清除搜索历史</div>`
   el.classList.remove('hidden')
 }
 function hideSearchHistory(){document.getElementById('searchHistory').classList.add('hidden')}
 function useHistory(kw){
-  document.getElementById('searchInput').value=kw
+  document.getElementById('searchInput').value=String(kw||'')
   hideSearchHistory();offset=0;posts=[];loadPosts()
 }
 function clearHistory(){
@@ -1035,12 +1052,16 @@ function clearHistory(){
 
 // ===== SHARE POST =====
 async function sharePost(id,title){
-  const url=`https://skishare.com.au?post=${id}`
-  if(navigator.share){
-    await navigator.share({title:'Ski Share - '+title,url})
-  }else{
-    await navigator.clipboard.writeText(url)
-    showToast('链接已复制')
+  const url=`https://skishare.com.au?post=${encodeURIComponent(id)}`
+  try{
+    if(navigator.share){
+      await navigator.share({title:'Ski Share - '+String(title||''),url})
+    }else{
+      await navigator.clipboard.writeText(url)
+      showToast('链接已复制')
+    }
+  }catch(e){
+    if(e?.name!=='AbortError')showToast('分享失败')
   }
 }
 
@@ -1052,7 +1073,8 @@ async function editPost(id){
   if(newTitle===null)return
   const newContent=prompt('修改内容：',p.content)
   if(newContent===null)return
-  await db.from('posts').update({title:newTitle.trim(),content:newContent.trim()}).eq('id',id)
+  const{error}=await db.from('posts').update({title:newTitle.trim(),content:newContent.trim()}).eq('id',id)
+  if(error){showToast('保存失败');return}
   showToast('已保存')
   openPost(id)
 }
