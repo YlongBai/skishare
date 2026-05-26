@@ -20,12 +20,15 @@
   --red:#e84a4a;--green:#2ecc71;--r:18px;--sh:0 2px 16px rgba(30,58,95,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Noto Sans SC',sans-serif;background:var(--snow);color:var(--text);min-height:100vh;padding-bottom:72px;max-width:480px;margin:0 auto}
+html{width:100%;overflow-x:hidden}
+html{background:var(--snow);overflow-x:hidden}body{font-family:'Noto Sans SC',sans-serif;background:var(--snow);color:var(--text);min-height:100vh;padding-bottom:72px;width:100%;max-width:none;margin:0;overflow-x:hidden}
 img{display:block}
 button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+#pg-home,#pg-detail,#pg-auth,#pg-publish,#pg-notifications,#pg-mine,#pg-profile{width:100%;max-width:480px;margin:0 auto;min-height:100vh;background:var(--snow);overflow-x:hidden}
+#pg-detail{background:#fff}
 
 /* NAV */
-.nav{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:52px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,58,95,.06);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.nav{position:fixed;top:0;left:0;right:0;margin:0 auto;width:100%;max-width:480px;height:52px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,58,95,.06);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
 .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:19px;color:var(--navy);letter-spacing:-.5px}
 .logo span{color:var(--accent)}
 .nav-right{display:flex;gap:8px}
@@ -39,11 +42,16 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .btn-full{width:100%;padding:13px;font-size:15px;border-radius:14px}
 
 /* TABS */
-.tabs-bar{position:fixed;top:52px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,58,95,.06);z-index:99;overflow-x:auto;scrollbar-width:none}
+.tabs-bar{position:fixed;top:52px;left:0;right:0;margin:0 auto;width:100%;max-width:480px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,58,95,.06);z-index:99;overflow-x:auto;scrollbar-width:none}
 .tabs-bar::-webkit-scrollbar{display:none}
-.tabs-inner{display:flex;gap:4px;padding:8px 12px;width:max-content}
+.tabs-inner{display:flex;gap:4px;padding:8px 12px;width:max-content;min-width:100%}
 .tab{padding:5px 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted);background:transparent;border:none;white-space:nowrap;transition:.15s}
 .tab.on{background:var(--navy);color:#fff}
+.subcat-bar{width:100%;padding:0 2px 8px;overflow-x:auto;scrollbar-width:none}
+.subcat-bar::-webkit-scrollbar{display:none}
+.subcat-inner{display:flex;gap:6px;width:max-content;min-width:100%;padding:0 0 2px}
+.subcat{padding:6px 12px;border-radius:999px;border:1.5px solid rgba(30,58,95,.12);background:#fff;color:var(--navy);font-size:12px;font-weight:600;white-space:nowrap}
+.subcat.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 
 /* SEARCH */
 .search-bar{padding:8px 12px 0}
@@ -52,9 +60,9 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .search-input::placeholder{color:var(--muted)}
 
 /* WATERFALL */
-.feed{padding:10px 10px 0;padding-top:116px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.col{display:flex;flex-direction:column;gap:10px}
+.feed{width:100%;padding:10px 10px 0;padding-top:116px;overflow-x:hidden}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
 
 /* CARD */
 .card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);animation:up .25s ease both;cursor:pointer;text-decoration:none;color:inherit;display:block}
@@ -78,7 +86,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .uname{font-size:11px;color:var(--muted)}
 
 /* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:64px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(30,58,95,.06);display:flex;z-index:100}
+.bnav{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:480px;height:64px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(30,58,95,.06);display:flex;z-index:100}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:500;position:relative;transition:.15s}
 .bn.on{color:var(--navy)}
 .bn svg{width:22px;height:22px}
@@ -128,7 +136,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .reply:last-child{margin-bottom:0}
 
 /* COMMENT INPUT */
-.cmt-input-wrap{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(30,58,95,.06);padding:8px 12px 8px;z-index:99}
+.cmt-input-wrap{position:fixed;bottom:64px;left:0;right:0;margin:0 auto;width:100%;max-width:480px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(30,58,95,.06);padding:8px 12px 8px;z-index:99}
 .reply-hint{font-size:12px;color:var(--accent);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
 .cmt-row{display:flex;gap:8px;align-items:center}
 .cmt-input{flex:1;padding:9px 14px;border-radius:999px;border:1.5px solid rgba(30,58,95,.12);background:var(--snow);font-family:'Noto Sans SC',sans-serif;font-size:14px;outline:none}
@@ -209,7 +217,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .bg-blue{background:#18c2ff}.bg-yellow{background:#f4b400}.bg-purple{background:#a855f7}.bg-green{background:#22c55e}.bg-teal{background:#0d9488}.bg-navy{background:var(--navy)}
 
 /* INSTALL BANNER */
-.install-banner{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--navy);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:200;box-shadow:0 4px 20px rgba(30,58,95,.3);animation:up .3s ease}
+.install-banner{position:fixed;bottom:72px;left:0;right:0;margin:0 auto;width:calc(100% - 24px);max-width:456px;background:var(--navy);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:200;box-shadow:0 4px 20px rgba(30,58,95,.3);animation:up .3s ease}
 .install-banner-left{display:flex;align-items:center;gap:10px}
 .install-banner-icon{font-size:24px}
 .install-banner-title{font-size:13px;font-weight:700;margin-bottom:2px}
@@ -270,6 +278,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
         <div id="searchHistory" class="search-history hidden"></div>
       </div>
     </div>
+    <div id="secondhandCats" class="subcat-bar hidden"></div>
     <div style="margin-top:10px" id="feedGrid"></div>
     <button class="load-more hidden" id="loadMoreBtn" onclick="loadMore()">加载更多</button>
     <div style="text-align:center;padding:16px 0 4px;font-size:12px;color:var(--muted)">
@@ -327,6 +336,9 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">目标雪场</label><select class="form-s" id="pubResort"><option value="">选择雪场</option><option>Perisher</option><option>Thredbo</option><option>Falls Creek</option><option>Mt Buller</option><option>Hotham</option></select></div>
       <div class="form-g"><label class="form-l">还缺几人</label><input class="form-i" type="number" id="pubSeats" placeholder="例如 2"></div>
     </div>
+    <div id="secondhandF" class="hidden">
+      <div class="form-g"><label class="form-l">二手分类</label><select class="form-s" id="pubSubcategory"><option value="">选择分类</option><option value="snowboard">单板</option><option value="ski">双板</option><option value="clothing">雪服</option><option value="helmet">头盔</option><option value="goggles">雪镜</option><option value="boots">雪鞋</option><option value="bindings">固定器</option><option value="other">其他</option></select></div>
+    </div>
     <div id="locationF" class="hidden"><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
     <div id="contactF"><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
     <div class="form-g">
@@ -346,6 +358,18 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <button class="btn btn-g btn-sm" onclick="clearNotifs()">清空</button>
     </div>
     <div id="notifList"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="pg-admin" class="hidden">
+  <button class="back-btn" onclick="showPg('mine')">‹</button>
+  <div style="padding:62px 10px 10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--navy)">管理后台</div>
+      <button class="btn btn-g btn-sm" onclick="loadAdminReports()">刷新</button>
+    </div>
+    <div id="adminReports"></div>
   </div>
 </div>
 
@@ -411,12 +435,13 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
-let me=null,curPg='home',curTab='all',posts=[],offset=0,pgSize=10,more=false
+let me=null,curPg='home',curTab='all',curSecondhandCat='all',posts=[],offset=0,pgSize=10,more=false
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
 let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
 const MAX_IMAGE_SIZE=10*1024*1024
 const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp']
 
+const SECONDHAND_CATS={snowboard:'单板',ski:'双板',clothing:'雪服',helmet:'头盔',goggles:'雪镜',boots:'雪鞋',bindings:'固定器',other:'其他'}
 const TABS=[{l:'推荐',v:'all'},{l:'雪友同行',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
 const TYPES=[{l:'雪友同行',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
 const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
@@ -425,7 +450,7 @@ const EMOJI={carpool:'🚗',room:'🏠',secondhand:'🎿',post:'❄️',news:'�
 ;(async()=>{
   const {data:{session}}=await db.auth.getSession()
   if(session){me=session.user;await loadMe();updateNav();checkUnread()}
-  renderTabs();renderTypes();renderImgGrid();loadPosts()
+  renderTabs();renderSecondhandCats();renderTypes();renderImgGrid();loadPosts()
   // 清空搜索框防止浏览器自动填充
   setTimeout(()=>{const s=document.getElementById('searchInput');if(s)s.value=''},100)
   db.auth.onAuthStateChange(async(_,s)=>{
@@ -454,7 +479,15 @@ function updateNav(){
 function renderTabs(){
   document.getElementById('tabsInner').innerHTML=TABS.map(t=>`<button class="tab ${t.v===curTab?'on':''}" onclick="chTab('${t.v}')">${t.l}</button>`).join('')
 }
-function chTab(v){curTab=v;offset=0;posts=[];renderTabs();loadPosts()}
+function chTab(v){curTab=v;if(v!=='secondhand')curSecondhandCat='all';offset=0;posts=[];renderTabs();renderSecondhandCats();loadPosts()}
+function renderSecondhandCats(){
+  const el=document.getElementById('secondhandCats');if(!el)return
+  el.classList.toggle('hidden',curTab!=='secondhand')
+  if(curTab!=='secondhand'){el.innerHTML='';return}
+  const cats=[['all','全部'],...Object.entries(SECONDHAND_CATS)]
+  el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curSecondhandCat===v?'on':''}" onclick="chSecondhandCat('${v}')">${l}</button>`).join('')}</div>`
+}
+function chSecondhandCat(v){curSecondhandCat=v;offset=0;posts=[];renderSecondhandCats();loadPosts()}
 
 // LOAD POSTS
 async function loadPosts(){
@@ -470,7 +503,12 @@ async function loadPosts(){
     addSearchHistory(safeKw)
     q=db.from('posts').select('*').or(`title.ilike.%${safeKw}%,content.ilike.%${safeKw}%,resort.ilike.%${safeKw}%,departure.ilike.%${safeKw}%`).order('created_at',{ascending:false})
   }else if(curTab!=='all'){
-    q=q.eq('type',curTab)
+    if(curTab==='secondhand'){
+      q=q.eq('type','secondhand')
+      if(curSecondhandCat&&curSecondhandCat!=='all')q=q.eq('subcategory',curSecondhandCat)
+    }else{
+      q=q.eq('type',curTab)
+    }
   }
   const{data,error}=await q.range(offset,offset+pgSize-1)
   if(error){
@@ -502,6 +540,7 @@ function mkCard(p){
     <div class="card-img-wrap">
       ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
+      ${p.type==='secondhand'&&p.subcategory?`<div class="card-tag">${SECONDHAND_CATS[p.subcategory]||'二手'}</div>`:''}
       ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
     </div>
     <div class="card-body">
@@ -699,18 +738,23 @@ async function delPost(id){
 
 async function reportPost(postId){
   if(!me){showPg('auth','login');return}
-  const reason=prompt('请简单说明举报原因：','虚假信息/诈骗/骚扰/违法内容')
-  if(reason===null)return
-  const clean=String(reason||'').trim().slice(0,300)
-  const{error}=await db.from('reports').insert({post_id:postId,reporter_id:me.id,reason:clean,status:'open'})
+  if(!canDoAction('report',60000)){showToast('举报太频繁，请稍后再试');return}
+  const preset=prompt('请选择或填写举报原因：\n1 诈骗/虚假信息\n2 骚扰/辱骂\n3 违法内容\n4 垃圾广告\n5 其他','1')
+  if(preset===null)return
+  const map={'1':'诈骗/虚假信息','2':'骚扰/辱骂','3':'违法内容','4':'垃圾广告','5':'其他'}
+  const reason=(map[String(preset).trim()]||String(preset||'')).trim().slice(0,300)
+  if(!reason){showToast('请填写举报原因');return}
+  const{error}=await db.from('reports').insert({post_id:postId,reporter_id:me.id,reason,status:'open'})
   if(error){showToast('举报提交失败：请确认 reports 表和 RLS 已配置');return}
-  showToast('举报已提交，感谢反馈')
+  showToast('举报已提交，管理员会处理')
 }
 
 async function revealContact(el,contact){
   if(!me){showToast('登录后可查看联系方式');showPg('auth','login');return}
+  if(!canDoAction('contact',3000)){showToast('操作太频繁');return}
   const val=String(contact||'').trim()
   if(!val){showToast('暂无联系方式');return}
+  try{await db.from('contact_views').insert({post_id:curPostId,viewer_id:me.id})}catch(e){}
   el.innerHTML=`<div class="contact-label">联系方式</div><div class="contact-val">${safe(val)}</div><div class="contact-hint" onclick="event.stopPropagation();copyText('${jsStr(val)}')">点击复制</div>`
 }
 
@@ -744,6 +788,7 @@ function renderTypes(){
 function selType(v){
   pubType=v;renderTypes()
   document.getElementById('carpoolF').classList.toggle('hidden',v!=='carpool')
+  document.getElementById('secondhandF').classList.toggle('hidden',v!=='secondhand')
   document.getElementById('locationF').classList.toggle('hidden',v==='carpool')
   document.getElementById('contactF').classList.toggle('hidden',v==='post'||v==='news')
 }
@@ -795,6 +840,8 @@ async function submitPost(){
   if(title.length>60){showToast('标题最多60字');return}
   const content=document.getElementById('pubContent').value.trim()
   if(content.length>2000){showToast('内容最多2000字');return}
+  const subcategory=document.getElementById('pubSubcategory')?.value||''
+  if(pubType==='secondhand'&&!subcategory){showToast('请选择二手分类');return}
   for(const f of selImgs){
     if(!ALLOWED_IMAGE_TYPES.includes(f.type)||f.size>MAX_IMAGE_SIZE){showToast('图片格式或大小不符合要求');return}
   }
@@ -811,7 +858,7 @@ async function submitPost(){
   }
   const{error}=await db.from('posts').insert({
     user_id:me.id,user_name:me.prof?.name||me.email.split('@')[0],user_avatar:me.prof?.avatar||null,
-    type:pubType,title,content,images:urls,
+    type:pubType,title,content,images:urls,subcategory,
     contact:document.getElementById('pubContact')?.value.trim()||'',
     location:document.getElementById('pubLocation')?.value.trim()||'',
     resort:document.getElementById('pubResort')?.value||'',
@@ -823,6 +870,7 @@ async function submitPost(){
   if(error){showToast('发布失败，请重试');return}
   showToast('发布成功！');selImgs=[];renderImgGrid()
   document.getElementById('pubTitle').value='';document.getElementById('pubContent').value=''
+  const subSel=document.getElementById('pubSubcategory');if(subSel)subSel.value=''
   showPg('home');loadPosts()
 }
 
@@ -913,6 +961,58 @@ async function checkUnread(){
   if(count>0){b.textContent=count>99?'99+':count;b.classList.remove('hidden')}else b.classList.add('hidden')
 }
 
+
+// ADMIN
+async function loadAdminReports(){
+  if(!me||!me.prof?.is_admin){showToast('没有管理员权限');showPg('mine');return}
+  const el=document.getElementById('adminReports')
+  if(!el)return
+  el.innerHTML='<div class="empty">加载中...</div>'
+  const{data,error}=await db.from('reports').select('*').order('created_at',{ascending:false}).limit(100)
+  if(error){el.innerHTML='<div class="empty">无法读取举报列表，请检查 reports RLS 管理员权限</div>';return}
+  if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div>暂无举报</div>';return}
+  const postIds=[...new Set(data.map(r=>r.post_id).filter(Boolean))]
+  let postMap={}
+  if(postIds.length){
+    const{data:ps}=await db.from('posts').select('id,title,user_name').in('id',postIds)
+    ;(ps||[]).forEach(p=>postMap[p.id]=p)
+  }
+  el.innerHTML=data.map(r=>{
+    const p=postMap[r.post_id]||{}
+    return `<div class="notif-item" style="display:block">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+        <div>
+          <div class="notif-name">${safe(r.reason||'未填写原因')}</div>
+          <div class="notif-text">帖子：${safe(p.title||r.post_id)}</div>
+          <div class="notif-time">状态：${safe(r.status)} · ${fmtTime(r.created_at)}</div>
+        </div>
+        <span style="font-size:11px;color:${r.status==='open'?'var(--red)':'var(--muted)'}">${safe(r.status)}</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-g btn-sm" onclick="openPost('${r.post_id}')">查看帖子</button>
+        <button class="btn btn-danger btn-sm" onclick="adminDeletePost('${r.post_id}')">删除帖子</button>
+        <button class="btn btn-g btn-sm" onclick="adminCloseReport('${r.id}')">标记已处理</button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+async function adminCloseReport(id){
+  if(!me?.prof?.is_admin)return
+  const{error}=await db.from('reports').update({status:'closed'}).eq('id',id)
+  if(error){showToast('更新失败，请检查管理员 update policy');return}
+  showToast('已标记处理');loadAdminReports()
+}
+
+async function adminDeletePost(id){
+  if(!me?.prof?.is_admin)return
+  if(!confirm('确定删除这个帖子？此操作不可恢复。'))return
+  const{error}=await db.from('posts').delete().eq('id',id)
+  if(error){showToast('删除失败，请检查 posts RLS/trigger');return}
+  await db.from('reports').update({status:'closed'}).eq('post_id',id)
+  showToast('帖子已删除');loadAdminReports()
+}
+
 // MINE
 function renderMine(){
   const el=document.getElementById('mineWrap')
@@ -934,6 +1034,9 @@ function renderMine(){
       <div class="mine-row" onclick="myFavs()"><span class="mine-row-label">我的收藏</span><span class="mine-arr">›</span></div>
       <div class="mine-row" onclick="editName()"><span class="mine-row-label">修改昵称</span><span class="mine-arr">›</span></div>
     </div>
+    ${p?.is_admin?`<div class="mine-section">
+      <div class="mine-row" onclick="showPg('admin')"><span class="mine-row-label">管理后台 / 举报处理</span><span class="mine-arr">›</span></div>
+    </div>`:''}
     <div class="mine-section">
       <div class="mine-row" onclick="signOut()"><span class="mine-row-label" style="color:var(--red)">退出登录</span></div>
     </div>
@@ -1003,6 +1106,8 @@ function showPg(pg,mode){
   const cmtWrap=document.getElementById('cmtInputWrap')
   if(cmtWrap)cmtWrap.style.display=pg==='detail'?'block':'none'
   if(pg==='notifications')loadNotifs()
+  if(pg==='home')renderSecondhandCats()
+  if(pg==='admin')loadAdminReports()
   if(pg==='mine')renderMine()
   if(pg==='publish'){selImgs=[];renderImgGrid();selType('post')}
   if(pg==='auth'){authMode='login';if(mode==='register'){authMode='register';toggleAuth()}else{document.getElementById('authTitle').textContent='欢迎回来';document.getElementById('authSub').textContent='登录你的 Ski Share 账号';document.getElementById('authBtn').textContent='登录';document.getElementById('authTogTxt').textContent='还没有账号？';document.getElementById('authTogBtn').textContent='注册';document.getElementById('authNameG').classList.add('hidden')}}
