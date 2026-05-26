@@ -831,18 +831,32 @@ function compressImage(file){
     const img=new Image()
     const url=URL.createObjectURL(file)
     img.onload=()=>{
-      const MAX=1200
+      const MAX=900
       let w=img.width,h=img.height
-      if(w>MAX){h=Math.round(h*MAX/w);w=MAX}
+      if(w>MAX||h>MAX){
+        if(w>=h){h=Math.round(h*MAX/w);w=MAX}
+        else{w=Math.round(w*MAX/h);h=MAX}
+      }
       const canvas=document.createElement('canvas')
       canvas.width=w;canvas.height=h
       canvas.getContext('2d').drawImage(img,0,0,w,h)
-      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.7)
+      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.65)
       URL.revokeObjectURL(url)
     }
-    img.onerror=()=>resolve(file)
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)}
     img.src=url
   })
+}
+
+async function uploadOneImage(file,index,total,onProgress){
+  onProgress&&onProgress(`压缩图片 ${index+1}/${total}...`)
+  const compressed=await compressImage(file)
+  onProgress&&onProgress(`上传图片 ${index+1}/${total}...`)
+  const path=`posts/${Date.now()}-${index}-${Math.random().toString(36).slice(2)}.jpg`
+  const{error}=await db.storage.from('images').upload(path,compressed,{contentType:'image/jpeg',upsert:false})
+  if(error)throw error
+  const{data:u}=db.storage.from('images').getPublicUrl(path)
+  return u.publicUrl
 }
 
 async function submitPost(){
@@ -865,39 +879,49 @@ async function submitPost(){
   for(const f of selImgs){
     if(!ALLOWED_IMAGE_TYPES.includes(f.type)||f.size>MAX_IMAGE_SIZE){showToast('图片格式或大小不符合要求');return}
   }
-  const btn=document.getElementById('pubBtn');btn.textContent='压缩图片中...';btn.disabled=true
-  const urls=[]
-  for(let i=0;i<selImgs.length;i++){
-    btn.textContent=`上传图片 ${i+1}/${selImgs.length}...`
-    const compressed=await compressImage(selImgs[i])
-    const ext='jpg'
-    const path=`posts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const{error}=await db.storage.from('images').upload(path,compressed,{contentType:'image/jpeg'})
-    if(error){btn.textContent='发布内容';btn.disabled=false;showToast('图片上传失败');return}
-    const{data:u}=db.storage.from('images').getPublicUrl(path);urls.push(u.publicUrl)
+
+  const btn=document.getElementById('pubBtn')
+  const oldText=btn.textContent
+  btn.textContent=selImgs.length?'准备上传图片...':'发布中...'
+  btn.disabled=true
+
+  try{
+    const urls=selImgs.length
+      ? await Promise.all(selImgs.map((file,i)=>uploadOneImage(file,i,selImgs.length,msg=>{btn.textContent=msg})))
+      : []
+
+    btn.textContent='保存帖子中...'
+    const{error}=await db.from('posts').insert({
+      user_id:me.id,user_name:me.prof?.name||me.email.split('@')[0],user_avatar:me.prof?.avatar||null,
+      type:pubType,title,content,images:urls,subcategory,
+      price:pubType==='secondhand'?price:null,
+      item_condition:pubType==='secondhand'?itemCondition:null,
+      city:pubType==='secondhand'?city:null,
+      contact:document.getElementById('pubContact')?.value.trim()||'',
+      location:document.getElementById('pubLocation')?.value.trim()||'',
+      resort:document.getElementById('pubResort')?.value||'',
+      departure:document.getElementById('pubDep')?.value.trim()||'',
+      trip_date:document.getElementById('pubDate')?.value||'',
+      seats_left:document.getElementById('pubSeats')?.value||''
+    })
+    if(error)throw error
+
+    showToast('发布成功！')
+    selImgs=[];renderImgGrid()
+    document.getElementById('pubTitle').value=''
+    document.getElementById('pubContent').value=''
+    const subSel=document.getElementById('pubSubcategory');if(subSel)subSel.value=''
+    const priceInput=document.getElementById('pubPrice');if(priceInput)priceInput.value=''
+    const conditionInput=document.getElementById('pubCondition');if(conditionInput)conditionInput.value=''
+    const cityInput=document.getElementById('pubCity');if(cityInput)cityInput.value=''
+    showPg('home');loadPosts()
+  }catch(err){
+    console.error(err)
+    showToast('发布失败，请重试')
+  }finally{
+    btn.textContent=oldText||'发布内容'
+    btn.disabled=false
   }
-  const{error}=await db.from('posts').insert({
-    user_id:me.id,user_name:me.prof?.name||me.email.split('@')[0],user_avatar:me.prof?.avatar||null,
-    type:pubType,title,content,images:urls,subcategory,
-    price:pubType==='secondhand'?price:null,
-    item_condition:pubType==='secondhand'?itemCondition:null,
-    city:pubType==='secondhand'?city:null,
-    contact:document.getElementById('pubContact')?.value.trim()||'',
-    location:document.getElementById('pubLocation')?.value.trim()||'',
-    resort:document.getElementById('pubResort')?.value||'',
-    departure:document.getElementById('pubDep')?.value.trim()||'',
-    trip_date:document.getElementById('pubDate')?.value||'',
-    seats_left:document.getElementById('pubSeats')?.value||''
-  })
-  btn.textContent='发布内容';btn.disabled=false
-  if(error){showToast('发布失败，请重试');return}
-  showToast('发布成功！');selImgs=[];renderImgGrid()
-  document.getElementById('pubTitle').value='';document.getElementById('pubContent').value=''
-  const subSel=document.getElementById('pubSubcategory');if(subSel)subSel.value=''
-  const priceInput=document.getElementById('pubPrice');if(priceInput)priceInput.value=''
-  const conditionInput=document.getElementById('pubCondition');if(conditionInput)conditionInput.value=''
-  const cityInput=document.getElementById('pubCity');if(cityInput)cityInput.value=''
-  showPg('home');loadPosts()
 }
 
 // AUTH
