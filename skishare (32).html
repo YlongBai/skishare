@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ski Share — 澳洲华人滑雪社区</title>
+<meta name="description" content="澳洲华人滑雪社区，雪友同行、拼房、二手雪具、雪场动态">
+<meta name="theme-color" content="#1E3A5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ski Share">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3bf.png">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#1E3A5F;--navy2:#2a4f7f;--ice:#e8f4fd;--snow:#f0f4f8;
+  --text:#0f1923;--muted:#7a8fa6;--white:#fff;--accent:#3b9ede;
+  --red:#e84a4a;--green:#2ecc71;--r:18px;--sh:0 2px 16px rgba(30,58,95,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--snow);color:var(--text);min-height:100vh;padding-bottom:72px;max-width:480px;margin:0 auto}
+img{display:block}
+button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+
+/* NAV */
+.nav{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:52px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,58,95,.06);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:19px;color:var(--navy);letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+.nav-right{display:flex;gap:8px}
+.btn{padding:7px 15px;border-radius:999px;border:none;font-size:13px;font-weight:600;transition:.15s}
+.btn-p{background:var(--navy);color:#fff}
+.btn-p:active{background:var(--navy2)}
+.btn-g{background:transparent;color:var(--navy);border:1.5px solid rgba(30,58,95,.25)}
+.btn-g:active{background:var(--ice)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-danger{background:var(--red);color:#fff}
+.btn-full{width:100%;padding:13px;font-size:15px;border-radius:14px}
+
+/* TABS */
+.tabs-bar{position:fixed;top:52px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,58,95,.06);z-index:99;overflow-x:auto;scrollbar-width:none}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tabs-inner{display:flex;gap:4px;padding:8px 12px;width:max-content}
+.tab{padding:5px 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted);background:transparent;border:none;white-space:nowrap;transition:.15s}
+.tab.on{background:var(--navy);color:#fff}
+
+/* SEARCH */
+.search-bar{padding:8px 12px 0}
+.search-input{width:100%;padding:10px 16px;border-radius:999px;border:1.5px solid rgba(30,58,95,.1);background:#fff;font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--text);outline:none;transition:.15s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--muted)}
+
+/* WATERFALL */
+.feed{padding:10px 10px 0;padding-top:116px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.col{display:flex;flex-direction:column;gap:10px}
+
+/* CARD */
+.card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);animation:up .25s ease both;cursor:pointer;text-decoration:none;color:inherit;display:block}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card:active{transform:scale(.98)}
+.card-img-wrap{position:relative;overflow:hidden}
+.card-img{width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--ice)}
+.card-placeholder{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:36px}
+.card-tag{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:2px 7px;border-radius:999px;backdrop-filter:blur(4px)}
+.card-pin{position:absolute;top:8px;right:8px;background:rgba(30,58,95,.8);color:#fff;font-size:10px;padding:2px 7px;border-radius:999px}
+.card-sold{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px}
+.card-body{padding:10px}
+.card-title{font-size:13px;font-weight:700;line-height:1.4;margin-bottom:5px;color:var(--text)}
+.card-desc{font-size:11px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+.card-foot{display:flex;align-items:center;gap:6px}
+.av-xs{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.av-xs img,.av-sm img,.av-md img,.av-lg img{width:100%;height:100%;object-fit:cover}
+.av-sm{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.av-md{width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.av-lg{width:76px;height:76px;border-radius:50%;background:var(--navy);color:#fff;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:3px solid rgba(255,255,255,.4)}
+.uname{font-size:11px;color:var(--muted)}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:64px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(30,58,95,.06);display:flex;z-index:100}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:500;position:relative;transition:.15s}
+.bn.on{color:var(--navy)}
+.bn svg{width:22px;height:22px}
+.badge{position:absolute;top:10px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;min-width:15px;height:15px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* DETAIL PAGE */
+.detail{padding-top:52px;min-height:100vh;padding-bottom:80px;background:#fff}
+.img-slider{position:relative;width:100%;background:#000;overflow:hidden}
+.img-slider-inner{display:flex;transition:transform .3s ease;height:280px}
+.img-slide{flex-shrink:0;width:100%;height:280px}
+.img-slide img{width:100%;height:100%;object-fit:contain;cursor:zoom-in}
+.slider-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5)}
+.dot.on{background:#fff;width:14px;border-radius:999px}
+.detail-body{padding:20px 16px 0}
+.detail-body-noimg{padding:72px 16px 0}
+.detail-title{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--navy);margin-bottom:14px;line-height:1.3}
+.detail-author{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--snow)}
+.detail-content{font-size:15px;line-height:1.85;color:var(--text);margin-bottom:18px;white-space:pre-wrap}
+.trip-box{background:var(--ice);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.trip-row{font-size:13px;color:var(--navy);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.trip-row:last-child{margin-bottom:0}
+.contact-box{border:1.5px solid rgba(30,58,95,.1);border-radius:12px;padding:12px 14px;margin-bottom:16px;cursor:pointer;transition:.15s}
+.contact-box:active{background:var(--ice)}
+.contact-label{font-size:11px;color:var(--muted);margin-bottom:5px}
+.contact-dots{font-size:18px;color:#ccc;letter-spacing:3px}
+.contact-hint{font-size:12px;color:var(--accent);font-weight:600;margin-top:3px}
+.contact-val{font-size:17px;font-weight:700;color:var(--navy)}
+.action-row{display:flex;gap:8px;margin-bottom:20px}
+.act-btn{flex:1;padding:10px 8px;border-radius:12px;border:1.5px solid rgba(30,58,95,.12);background:#fff;font-size:13px;font-weight:600;color:var(--navy);transition:.15s}
+.act-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.act-btn.red{border-color:rgba(232,74,74,.2);color:var(--red);background:rgba(232,74,74,.05)}
+
+/* COMMENTS */
+.cmts{padding:0 16px 20px}
+.cmts-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;padding-top:16px;border-top:1px solid var(--snow)}
+.cmt{display:flex;gap:10px;margin-bottom:14px}
+.cmt-body{flex:1}
+.cmt-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.cmt-text{font-size:14px;line-height:1.6;color:var(--text);margin-bottom:5px}
+.cmt-meta{display:flex;align-items:center;gap:10px}
+.cmt-time{font-size:11px;color:var(--muted)}
+.cmt-btn{font-size:12px;color:var(--accent);border:none;background:none;padding:0}
+.cmt-del{font-size:12px;color:var(--red);border:none;background:none;padding:0}
+.replies{margin-top:10px;background:var(--snow);border-radius:10px;padding:10px 12px}
+.reply{display:flex;gap:8px;margin-bottom:10px}
+.reply:last-child{margin-bottom:0}
+
+/* COMMENT INPUT */
+.cmt-input-wrap{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(30,58,95,.06);padding:8px 12px 8px;z-index:99}
+.reply-hint{font-size:12px;color:var(--accent);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.cmt-row{display:flex;gap:8px;align-items:center}
+.cmt-input{flex:1;padding:9px 14px;border-radius:999px;border:1.5px solid rgba(30,58,95,.12);background:var(--snow);font-family:'Noto Sans SC',sans-serif;font-size:14px;outline:none}
+.cmt-input:focus{border-color:var(--accent)}
+
+/* AUTH */
+.auth-page{padding:60px 20px 20px;max-width:380px;margin:0 auto}
+.auth-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.auth-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.form-g{margin-bottom:14px}
+.form-l{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:5px}
+.form-i,.form-t,.form-s{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid rgba(30,58,95,.12);background:var(--snow);font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--text);outline:none;transition:.15s}
+.form-i:focus,.form-t:focus,.form-s:focus{border-color:var(--accent);background:#fff}
+.form-t{height:96px;resize:none;line-height:1.6}
+.pwd-wrap{position:relative}
+.pwd-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:17px;cursor:pointer;color:var(--muted)}
+
+/* PUBLISH */
+.pub-page{padding:62px 14px 20px}
+.pub-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:18px}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.type-card{padding:10px 12px;border-radius:12px;border:1.5px solid rgba(30,58,95,.1);background:var(--snow);cursor:pointer;transition:.15s}
+.type-card.on{border-color:var(--navy);background:var(--ice)}
+.type-label{font-size:13px;font-weight:700;color:var(--navy)}
+.type-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.img-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.img-thumb{aspect-ratio:1;border-radius:10px;object-fit:cover;width:100%;position:relative}
+.img-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.img-add{aspect-ratio:1;border-radius:10px;border:2px dashed rgba(30,58,95,.18);background:var(--snow);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--muted);cursor:pointer}
+
+/* NOTIFICATIONS */
+.notif-item{background:#fff;border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;cursor:pointer;position:relative;box-shadow:var(--sh)}
+.notif-item:active{transform:scale(.99)}
+.notif-dot{position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--red)}
+.notif-body{flex:1}
+.notif-name{font-size:13px;font-weight:700;color:var(--navy)}
+.notif-text{font-size:13px;color:var(--text);margin:3px 0}
+.notif-post{font-size:12px;color:var(--accent)}
+.notif-time{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* MINE */
+.mine-hero{background:linear-gradient(160deg,var(--navy) 0%,#2d5a8e 100%);padding:72px 20px 32px;display:flex;align-items:center;gap:16px}
+.mine-info{flex:1}
+.mine-name{font-size:19px;font-weight:700;color:#fff;margin-bottom:3px}
+.mine-email{font-size:12px;color:rgba(255,255,255,.65)}
+.mine-edit-av{font-size:11px;color:rgba(255,255,255,.7);margin-top:5px;cursor:pointer;text-decoration:underline}
+.mine-section{background:#fff;border-radius:var(--r);margin:10px;overflow:hidden;box-shadow:var(--sh)}
+.mine-row{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(30,58,95,.05);cursor:pointer}
+.mine-row:last-child{border-bottom:none}
+.mine-row:active{background:var(--snow)}
+.mine-row-label{font-size:14px;color:var(--text)}
+.mine-arr{color:var(--muted);font-size:18px}
+
+/* PROFILE PAGE */
+.profile-hero{background:linear-gradient(160deg,var(--navy) 0%,#2d5a8e 100%);padding:72px 20px 28px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.profile-name{font-size:18px;font-weight:700;color:#fff;margin-top:12px}
+.profile-count{font-size:12px;color:rgba(255,255,255,.65);margin-top:3px}
+
+/* IMAGE VIEWER */
+.img-viewer{position:fixed;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.img-viewer img{max-width:100%;max-height:85vh;object-fit:contain}
+.img-viewer-close{position:absolute;top:16px;right:16px;color:#fff;font-size:28px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border-radius:50%}
+.img-viewer-nav{display:flex;gap:10px;margin-top:12px}
+.img-viewer-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4)}
+.img-viewer-dot.on{background:#fff;width:18px;border-radius:999px}
+
+/* UTILS */
+.hidden{display:none!important}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(15,25,35,.88);color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;z-index:9999;white-space:nowrap;animation:toastIn .2s ease;pointer-events:none}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.back-btn{position:fixed;top:60px;left:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);border:none;box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--navy);z-index:101;backdrop-filter:blur(8px)}
+.load-more{margin:0 10px 12px;padding:11px;border-radius:999px;border:1.5px solid rgba(30,58,95,.15);background:#fff;font-size:13px;font-weight:600;color:var(--navy);width:calc(100% - 20px);cursor:pointer}
+.load-more:active{background:var(--ice)}
+.divider{height:1px;background:var(--snow);margin:4px 0}
+
+.bg-blue{background:#18c2ff}.bg-yellow{background:#f4b400}.bg-purple{background:#a855f7}.bg-green{background:#22c55e}.bg-teal{background:#0d9488}.bg-navy{background:var(--navy)}
+
+/* INSTALL BANNER */
+.install-banner{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--navy);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:200;box-shadow:0 4px 20px rgba(30,58,95,.3);animation:up .3s ease}
+.install-banner-left{display:flex;align-items:center;gap:10px}
+.install-banner-icon{font-size:24px}
+.install-banner-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.install-banner-sub{font-size:11px;opacity:.8}
+.install-banner-btn{background:#fff;color:var(--navy);border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.install-banner-close{color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;padding:0 0 0 8px;flex-shrink:0}
+
+/* SKELETON */
+.skel{background:#e8eef4;border-radius:8px}
+.skel-card{background:#fff;border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.skel-img{width:100%;aspect-ratio:3/4}
+.skel-line{height:12px;margin:10px 10px 6px}
+.skel-line.short{width:60%;margin-bottom:10px}
+
+/* BACK TO TOP */
+.back-top{position:fixed;bottom:80px;right:16px;width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;border:none;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(30,58,95,.3);cursor:pointer;z-index:99;opacity:0;transition:opacity .3s;pointer-events:none}
+.back-top.show{opacity:1;pointer-events:auto}
+
+/* SEARCH HISTORY */
+.search-wrap-rel{position:relative}
+.search-history{position:absolute;top:100%;left:0;right:0;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(30,58,95,.12);z-index:200;overflow:hidden;margin-top:4px}
+.sh-item{padding:10px 14px;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--snow)}
+.sh-item:last-child{border-bottom:none}
+.sh-item:active{background:var(--snow)}
+.sh-clear{padding:8px 14px;font-size:12px;color:var(--muted);text-align:center;cursor:pointer;border-top:1px solid var(--snow)}
+</style>
+</head>
+<body>
+
+<!-- INSTALL BANNER -->
+<div id="installBanner" class="install-banner hidden">
+  <div class="install-banner-left">
+    <div class="install-banner-icon">🎿</div>
+    <div>
+      <div class="install-banner-title">添加到主屏幕</div>
+      <div class="install-banner-sub">像App一样使用 Ski Share</div>
+    </div>
+  </div>
+  <button class="install-banner-btn" onclick="doInstall()">添加</button>
+  <span class="install-banner-close" onclick="dismissInstall()">✕</span>
+</div>
+
+<!-- BACK TO TOP -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<nav class="nav">
+  <div class="logo">Ski<span>Share</span></div>
+  <div class="nav-right" id="navRight"></div>
+</nav>
+
+<!-- HOME -->
+<div id="pg-home">
+  <div class="tabs-bar"><div class="tabs-inner" id="tabsInner"></div></div>
+  <div class="feed">
+    <div class="search-bar">
+      <div class="search-wrap-rel">
+        <input class="search-input" placeholder="搜索帖子、雪场、出发地..." id="searchInput" oninput="onSearch()" autocomplete="off" type="search" onfocus="showSearchHistory()" onblur="setTimeout(hideSearchHistory,200)">
+        <div id="searchHistory" class="search-history hidden"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px" id="feedGrid"></div>
+    <button class="load-more hidden" id="loadMoreBtn" onclick="loadMore()">加载更多</button>
+    <div style="text-align:center;padding:16px 0 4px;font-size:12px;color:var(--muted)">
+      <span onclick="document.getElementById('disclaimerModal').classList.remove('hidden')" style="cursor:pointer;text-decoration:underline">免责声明与用户协议</span>
+      &nbsp;·&nbsp; © 2026 Ski Share
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div id="pg-detail" class="hidden">
+  <button class="back-btn" onclick="goBack()">‹</button>
+  <div class="detail" id="detailWrap"></div>
+  <div class="cmt-input-wrap" id="cmtInputWrap" style="display:none">
+    <div id="replyHint" class="reply-hint hidden">
+      <span id="replyHintTxt"></span><span onclick="cancelReply()" style="cursor:pointer;color:var(--muted)">✕</span>
+    </div>
+    <div class="cmt-row">
+      <input class="cmt-input" placeholder="写评论..." id="cmtInput" maxlength="200">
+      <button class="btn btn-p btn-sm" onclick="sendComment()">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div id="pg-auth" class="hidden">
+  <div class="auth-page">
+    <div class="auth-title" id="authTitle">欢迎回来</div>
+    <div class="auth-sub" id="authSub">登录你的 Ski Share 账号</div>
+    <div class="form-g"><label class="form-l">邮箱</label><input class="form-i" type="email" id="authEmail" placeholder="your@email.com"></div>
+    <div class="form-g">
+      <label class="form-l">密码</label>
+      <div class="pwd-wrap"><input class="form-i" type="password" id="authPwd" placeholder="••••••••" style="padding-right:40px"><span class="pwd-eye" onclick="togglePwd()">👁</span></div>
+      <div id="forgotLink" style="text-align:right;margin-top:6px"><span style="font-size:12px;color:var(--accent);cursor:pointer" onclick="forgotPassword()">忘记密码？</span></div>
+    </div>
+    <div class="form-g hidden" id="authNameG"><label class="form-l">昵称</label><input class="form-i" id="authName" placeholder="你的昵称"></div>
+    <button class="btn btn-p btn-full" onclick="doAuth()" id="authBtn" style="margin-bottom:12px">登录</button>
+    <div style="text-align:center;font-size:13px;color:var(--muted)">
+      <span id="authTogTxt">还没有账号？</span>
+      <span style="color:var(--accent);cursor:pointer" onclick="toggleAuth()" id="authTogBtn">注册</span>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLISH -->
+<div id="pg-publish" class="hidden">
+  <div class="pub-page">
+    <div class="pub-title">发布内容</div>
+    <div class="form-g"><label class="form-l">类型</label><div class="type-grid" id="typeGrid"></div></div>
+    <div class="form-g"><label class="form-l">标题</label><input class="form-i" id="pubTitle" placeholder="输入标题"></div>
+    <div class="form-g"><label class="form-l">详细内容</label><textarea class="form-t" id="pubContent" placeholder="分享更多详情..."></textarea></div>
+    <div id="carpoolF" class="hidden">
+      <div class="form-g"><label class="form-l">出发日期</label><input class="form-i" type="date" id="pubDate"></div>
+      <div class="form-g"><label class="form-l">出发地</label><input class="form-i" id="pubDep" placeholder="例如 Sydney"></div>
+      <div class="form-g"><label class="form-l">目标雪场</label><select class="form-s" id="pubResort"><option value="">选择雪场</option><option>Perisher</option><option>Thredbo</option><option>Falls Creek</option><option>Mt Buller</option><option>Hotham</option></select></div>
+      <div class="form-g"><label class="form-l">还缺几人</label><input class="form-i" type="number" id="pubSeats" placeholder="例如 2"></div>
+    </div>
+    <div id="locationF" class="hidden"><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
+    <div id="contactF"><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
+    <div class="form-g">
+      <label class="form-l">图片（最多3张）</label>
+      <div class="img-grid" id="pubImgs"></div>
+      <input type="file" id="pubImgIn" accept="image/*" multiple style="display:none" onchange="onImgSel(event)">
+    </div>
+    <button class="btn btn-p btn-full" id="pubBtn" onclick="submitPost()">发布内容</button>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="pg-notifications" class="hidden">
+  <div style="padding:62px 10px 10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--navy)">通知</div>
+      <button class="btn btn-g btn-sm" onclick="clearNotifs()">清空</button>
+    </div>
+    <div id="notifList"></div>
+  </div>
+</div>
+
+<!-- MINE -->
+<div id="pg-mine" class="hidden"><div id="mineWrap"></div></div>
+
+<!-- PROFILE -->
+<div id="pg-profile" class="hidden">
+  <button class="back-btn" onclick="goBack()">‹</button>
+  <div id="profileWrap"></div>
+</div>
+
+<!-- IMAGE VIEWER -->
+<div id="imgViewer" class="img-viewer hidden">
+  <div class="img-viewer-close" onclick="closeViewer()">✕</div>
+  <img id="viewerImg" src="">
+  <div class="img-viewer-nav" id="viewerDots"></div>
+</div>
+
+<!-- AVATAR UPLOAD -->
+<input type="file" id="avInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+
+<!-- DISCLAIMER MODAL -->
+<div id="disclaimerModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;justify-content:center">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px 20px 40px">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:16px">免责声明与用户协议</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text)">
+      <p style="font-weight:700;margin-bottom:6px">一、平台性质</p>
+      <p style="margin-bottom:14px">Ski Share 是面向澳洲华人滑雪爱好者的信息交流社区，平台仅提供信息发布和交流服务，不对用户发布内容的真实性、准确性或合法性承担责任。</p>
+      <p style="font-weight:700;margin-bottom:6px">二、用户行为规范</p>
+      <p style="margin-bottom:14px">用户发布内容须符合澳大利亚相关法律法规，禁止发布虚假信息、诈骗内容、违法内容及骚扰他人的内容。违规用户将被封号处理。</p>
+      <p style="font-weight:700;margin-bottom:6px">三、交易风险</p>
+      <p style="margin-bottom:14px">平台上的拼车、拼房、二手交易等均为用户间自行协商，平台不参与任何交易，不对交易结果承担责任。请用户自行判断风险，谨慎交易。</p>
+      <p style="font-weight:700;margin-bottom:6px">四、隐私保护</p>
+      <p style="margin-bottom:14px">我们收集您的邮箱地址和发布内容用于提供服务，不会向第三方出售您的个人信息。</p>
+      <p style="font-weight:700;margin-bottom:6px">五、免责条款</p>
+      <p style="margin-bottom:20px">因用户发布虚假信息、从事欺诈行为或其他违法行为造成的损失，平台不承担任何法律责任。</p>
+    </div>
+    <button class="btn btn-p btn-full" onclick="document.getElementById('disclaimerModal').classList.add('hidden')">我已了解</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bn on" id="bn-home" onclick="showPg('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>首页
+  </button>
+  <button class="bn" id="bn-publish" onclick="requireAuth(()=>showPg('publish'))">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>发布
+  </button>
+  <button class="bn" id="bn-notifications" onclick="requireAuth(()=>showPg('notifications'))">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>通知
+    <span class="badge hidden" id="notifBadge"></span>
+  </button>
+  <button class="bn" id="bn-mine" onclick="showPg('mine')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>我的
+  </button>
+</div>
+
+<script>
+const SB_URL='https://padxqozqnbxyksvmbkmt.supabase.co'
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZHhxb3pxbmJ4eWtzdm1ia210Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODE2MzksImV4cCI6MjA5NTM1NzYzOX0._9b4o4EPSYuoRmy1UZ9avCz9oEgB7fWsnfO2QnuKllM'
+const {createClient}=supabase
+const db=createClient(SB_URL,SB_KEY)
+
+let me=null,curPg='home',curTab='all',posts=[],offset=0,pgSize=10,more=false
+let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
+let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
+
+const TABS=[{l:'推荐',v:'all'},{l:'雪友同行',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
+const TYPES=[{l:'雪友同行',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
+const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
+const EMOJI={carpool:'🚗',room:'🏠',secondhand:'🎿',post:'❄️',news:'🏔️'}
+
+;(async()=>{
+  const {data:{session}}=await db.auth.getSession()
+  if(session){me=session.user;await loadMe();updateNav();checkUnread()}
+  renderTabs();renderTypes();renderImgGrid();loadPosts()
+  // 清空搜索框防止浏览器自动填充
+  setTimeout(()=>{const s=document.getElementById('searchInput');if(s)s.value=''},100)
+  db.auth.onAuthStateChange(async(_,s)=>{
+    me=s?.user||null;updateNav()
+    if(me){
+      const{data:ex}=await db.from('profiles').select('id').eq('id',me.id).maybeSingle()
+      if(!ex){const n=me.user_metadata?.name||me.email.split('@')[0];await db.from('profiles').insert({id:me.id,name:n})}
+      await loadMe();checkUnread()
+    }
+  })
+})()
+
+async function loadMe(){
+  if(!me)return
+  const{data}=await db.from('profiles').select('*').eq('id',me.id).maybeSingle()
+  if(data)me.prof=data
+}
+
+function updateNav(){
+  document.getElementById('navRight').innerHTML=me
+    ?`<button class="btn btn-p btn-sm" onclick="requireAuth(()=>showPg('publish'))">+ 发布</button>`
+    :`<button class="btn btn-g btn-sm" onclick="showPg('auth','login')">登录</button><button class="btn btn-p btn-sm" onclick="showPg('auth','register')">注册</button>`
+}
+
+// TABS
+function renderTabs(){
+  document.getElementById('tabsInner').innerHTML=TABS.map(t=>`<button class="tab ${t.v===curTab?'on':''}" onclick="chTab('${t.v}')">${t.l}</button>`).join('')
+}
+function chTab(v){curTab=v;offset=0;posts=[];renderTabs();loadPosts()}
+
+// LOAD POSTS
+async function loadPosts(){
+  const el=document.getElementById('feedGrid')
+  if(offset===0)el.innerHTML='<div class="empty"><div class="empty-icon">❄️</div>加载中...</div>'
+  if(offset===0){
+    const col=Array(3).fill(`<div class="skel-card"><div class="skel skel-img"></div><div class="skel skel-line"></div><div class="skel skel-line short"></div></div>`).join('')
+    document.getElementById('feedGrid').innerHTML=`<div class="grid"><div class="col">${col}</div><div class="col">${col}</div></div>`
+  }
+  let q=db.from('posts').select('*').order('pinned',{ascending:false}).order('created_at',{ascending:false})
+  if(kw)q=db.from('posts').select('*').or(`title.ilike.%${kw}%,content.ilike.%${kw}%,resort.ilike.%${kw}%,departure.ilike.%${kw}%`).order('created_at',{ascending:false})
+  else if(curTab!=='all')q=q.eq('type',curTab)
+  const{data}=await q.range(offset,offset+pgSize-1)
+  const rows=data||[]
+  if(offset===0)posts=rows;else posts=[...posts,...rows]
+  more=rows.length===pgSize
+  document.getElementById('loadMoreBtn').classList.toggle('hidden',!more)
+  renderPosts()
+}
+function loadMore(){offset+=pgSize;loadPosts()}
+function onSearch(){clearTimeout(searchTmr);searchTmr=setTimeout(()=>{offset=0;posts=[];loadPosts()},500)}
+
+function renderPosts(){
+  const el=document.getElementById('feedGrid')
+  if(!posts.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎿</div>暂无内容</div>';return}
+  const L=posts.filter((_,i)=>i%2===0),R=posts.filter((_,i)=>i%2!==0)
+  el.innerHTML=`<div class="grid"><div class="col">${L.map(mkCard).join('')}</div><div class="col">${R.map(mkCard).join('')}</div></div>`
+}
+
+function mkCard(p){
+  const cover=p.images&&p.images[0]
+  const init=(p.user_name||'雪')[0]
+  return`<div class="card" onclick="openPost('${p.id}')">
+    <div class="card-img-wrap">
+      ${cover?`<img class="card-img" src="${cover}" loading="lazy">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
+      ${p.sold?'<div class="card-sold">已售出</div>':''}
+      ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
+    </div>
+    <div class="card-body">
+      <div class="card-title">${p.title||''}</div>
+      <div class="card-desc">${p.content||''}</div>
+      <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${esc(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
+        <div class="av-xs">${p.user_avatar?`<img src="${p.user_avatar}">`:(p.user_name||'雪')[0]}</div>
+        <span class="uname">${p.user_name||'雪友'}</span>
+      </div>
+    </div>
+  </div>`
+}
+
+// DETAIL
+async function openPost(id){
+  prevPg=curPg;curPostId=id;showPg('detail')
+  const el=document.getElementById('detailWrap')
+  el.innerHTML='<div class="empty">加载中...</div>'
+  const[{data:p},{data:cmts}]=await Promise.all([
+    db.from('posts').select('*').eq('id',id).single(),
+    db.from('comments').select('*').eq('post_id',id).order('created_at',{ascending:true})
+  ])
+  if(!p){el.innerHTML='<div class="empty">帖子不存在</div>';return}
+  let isFav=false
+  if(me){const{data:f}=await db.from('favorites').select('id').eq('user_id',me.id).eq('post_id',id).maybeSingle();isFav=!!f}
+  const isOwner=me&&me.id===p.user_id
+  const isAdmin=me&&me.prof?.is_admin
+  const canDelete=isOwner||isAdmin
+  const imgs=p.images||[]
+
+  el.innerHTML=`
+    ${imgs.length?`
+      <div class="img-slider" id="slider">
+        <div class="img-slider-inner" id="sliderInner">
+          ${imgs.map((src,i)=>`<div class="img-slide"><img src="${src}" onclick="openViewer(${i})" data-imgs='${JSON.stringify(imgs)}' style="cursor:zoom-in"></div>`).join('')}
+        </div>
+        ${imgs.length>1?`<div class="slider-dots" id="sliderDots">${imgs.map((_,i)=>`<div class="dot ${i===0?'on':''}"></div>`).join('')}</div>`:''}
+      </div>`
+    :`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}" style="height:200px;font-size:60px">${EMOJI[p.type]||'🎿'}</div>`}
+    <div class="${imgs.length?'detail-body':'detail-body-noimg'}">
+      <div class="detail-title">${p.title||'未命名帖子'}</div>
+      <div class="detail-author">
+        <div class="av-md" style="cursor:pointer" onclick="openProfile('${p.user_id}','${esc(p.user_name||'雪友')}','${p.user_avatar||''}')">${p.user_avatar?`<img src="${p.user_avatar}">`:(p.user_name||'雪')[0]}</div>
+        <div style="flex:1;cursor:pointer" onclick="openProfile('${p.user_id}','${esc(p.user_name||'雪友')}','${p.user_avatar||''}')">
+          <div style="font-weight:700;font-size:14px">${p.user_name||'雪友'}</div>
+          <div style="font-size:12px;color:var(--muted)">${fmtTime(p.created_at)}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${isAdmin?`<button class="btn btn-sm" style="background:${p.pinned?'var(--navy)':'rgba(30,58,95,.1)'};color:${p.pinned?'#fff':'var(--navy)'};border:none" onclick="togglePin('${p.id}',${p.pinned})">${p.pinned?'📌 已置顶':'置顶'}</button>`:''}
+          ${canDelete?`<button class="btn btn-sm" style="background:rgba(232,74,74,.1);color:var(--red);border:none" onclick="delPost('${p.id}')">删除</button>`:''}
+        </div>
+      </div>
+      ${p.type==='carpool'?`<div class="trip-box">
+        ${p.trip_date?`<div class="trip-row">📅 ${p.trip_date}</div>`:''}
+        ${p.departure?`<div class="trip-row">📍 ${p.departure}</div>`:''}
+        ${p.resort?`<div class="trip-row">🎿 ${p.resort}</div>`:''}
+        ${p.seats_left?`<div class="trip-row">👥 缺 ${p.seats_left} 人</div>`:''}
+      </div>`:''}
+      <div class="detail-content">${p.content||'暂无内容'}</div>
+      ${p.contact?`<div class="contact-box" onclick="revealContact(this,'${esc(p.contact)}')">
+        <div class="contact-label">联系方式</div>
+        <div class="contact-dots">••••••••</div>
+        <div class="contact-hint">点击查看</div>
+      </div>`:''}
+      <div class="action-row">
+        <button class="act-btn ${isFav?'on':''}" id="favBtn" onclick="toggleFav('${p.id}',${isFav})">${isFav?'⭐ 已收藏':'☆ 收藏'}</button>
+        <button class="act-btn" onclick="sharePost('${p.id}','${esc(p.title||'')}')">↗ 分享</button>
+        ${isOwner?`<button class="act-btn" onclick="editPost('${p.id}')">✏️ 编辑</button>`:''}
+        ${isOwner&&p.type==='secondhand'?`<button class="act-btn ${p.sold?'on':''}" onclick="toggleSold('${p.id}',${p.sold})">${p.sold?'✅ 已售出':'标记售出'}</button>`:''}
+        ${!isOwner?`<button class="act-btn red" onclick="reportPost('${p.id}')">⚑ 举报</button>`:''}
+      </div>
+    </div>
+    <div class="cmts"><div class="cmts-title">评论 ${cmts.length||''}</div>${renderCmts(cmts)}</div>`
+
+  // init slider
+  if(imgs.length>1)initSlider(imgs)
+}
+
+function initSlider(imgs){
+  sliderIdx=0
+  const inner=document.getElementById('sliderInner')
+  if(!inner)return
+  let startX=0
+  inner.parentElement.addEventListener('touchstart',e=>{startX=e.touches[0].clientX},{passive:true})
+  inner.parentElement.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX
+    if(Math.abs(dx)>40){
+      if(dx<0&&sliderIdx<imgs.length-1)sliderIdx++
+      else if(dx>0&&sliderIdx>0)sliderIdx--
+      inner.style.transform=`translateX(-${sliderIdx*100}%)`
+      document.querySelectorAll('#sliderDots .dot').forEach((d,i)=>d.classList.toggle('on',i===sliderIdx))
+    }
+  },{passive:true})
+}
+
+function renderCmts(cmts){
+  if(!cmts||!cmts.length)return'<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">暂无评论，来说点什么吧</div>'
+  const map={};const roots=[]
+  cmts.forEach(c=>{map[c.id]={...c,replies:[]}})
+  cmts.forEach(c=>{c.reply_to_comment_id&&map[c.reply_to_comment_id]?map[c.reply_to_comment_id].replies.push(map[c.id]):roots.push(map[c.id])})
+  return roots.map(c=>mkCmt(c,null)).join('')
+}
+
+function mkCmt(c,rootId){
+  const isMe=me&&me.id===c.user_id
+  const init=(c.user_name||'雪')[0]
+  return`<div class="cmt">
+    <div class="av-sm">${c.user_avatar?`<img src="${c.user_avatar}">`:init}</div>
+    <div class="cmt-body">
+      <div class="cmt-name">${c.user_name||'雪友'}</div>
+      <div class="cmt-text">${c.content}</div>
+      <div class="cmt-meta">
+        <span class="cmt-time">${fmtTime(c.created_at)}</span>
+        <button class="cmt-btn" onclick="replyTo('${c.id}','${esc(c.user_name||'雪友')}','${rootId||c.id}')">回复</button>
+        ${isMe?`<button class="cmt-del" onclick="delCmt('${c.id}')">删除</button>`:''}
+      </div>
+      ${c.replies&&c.replies.length?`<div class="replies">${c.replies.map(r=>`
+        <div class="reply">
+          <div class="av-xs" style="width:22px;height:22px">${r.user_avatar?`<img src="${r.user_avatar}">`:(r.user_name||'雪')[0]}</div>
+          <div class="cmt-body">
+            <div class="cmt-name" style="font-size:12px">${r.user_name||'雪友'}${r.reply_to_user_name?` <span style="color:var(--muted);font-weight:400;font-size:11px">回复 ${r.reply_to_user_name}</span>`:''}</div>
+            <div class="cmt-text" style="font-size:13px">${r.content}</div>
+            <div class="cmt-meta">
+              <span class="cmt-time">${fmtTime(r.created_at)}</span>
+              <button class="cmt-btn" onclick="replyTo('${r.id}','${esc(r.user_name||'雪友')}','${c.id}')">回复</button>
+              ${me&&me.id===r.user_id?`<button class="cmt-del" onclick="delCmt('${r.id}')">删除</button>`:''}
+            </div>
+          </div>
+        </div>`).join('')}</div>`:''}
+    </div>
+  </div>`
+}
+
+function replyTo(cid,name,rootId){
+  replyId=rootId||cid;replyName=name
+  document.getElementById('replyHint').classList.remove('hidden')
+  document.getElementById('replyHintTxt').textContent=`回复 ${name}`
+  document.getElementById('cmtInput').focus()
+}
+function cancelReply(){replyId=null;replyName=null;document.getElementById('replyHint').classList.add('hidden')}
+
+async function sendComment(){
+  if(!me){showPg('auth','login');return}
+  const txt=document.getElementById('cmtInput').value.trim()
+  if(!txt)return
+  const{error}=await db.from('comments').insert({
+    post_id:curPostId,user_id:me.id,
+    user_name:me.prof?.name||me.email.split('@')[0],
+    user_avatar:me.prof?.avatar||null,
+    content:txt,reply_to_comment_id:replyId||null,reply_to_user_name:replyName||null
+  })
+  if(error){showToast('评论失败');return}
+  if(replyId){
+    const{data:r}=await db.from('comments').select('user_id').eq('id',replyId).single()
+    if(r&&r.user_id!==me.id)sendNotif(r.user_id,'reply',txt)
+  }else{
+    const{data:p}=await db.from('posts').select('user_id').eq('id',curPostId).single()
+    if(p&&p.user_id!==me.id)sendNotif(p.user_id,'comment',txt)
+  }
+  document.getElementById('cmtInput').value='';cancelReply();showToast('评论成功');openPost(curPostId)
+}
+
+async function sendNotif(uid,type,content){
+  const{data:p}=await db.from('posts').select('title').eq('id',curPostId).single()
+  await db.from('notifications').insert({user_id:uid,sender_id:me.id,sender_name:me.prof?.name||me.email.split('@')[0],sender_avatar:me.prof?.avatar||null,type,post_id:curPostId,post_title:p?.title||'',content,is_read:false})
+}
+
+async function delCmt(id){if(!confirm('确定删除？'))return;await db.from('comments').delete().eq('id',id);openPost(curPostId)}
+
+async function toggleFav(postId,isFav){
+  if(!me){showPg('auth','login');return}
+  if(isFav)await db.from('favorites').delete().eq('user_id',me.id).eq('post_id',postId)
+  else await db.from('favorites').insert({user_id:me.id,post_id:postId})
+  openPost(postId)
+}
+
+async function toggleSold(postId,sold){
+  await db.from('posts').update({sold:!sold}).eq('id',postId);openPost(postId)
+}
+
+async function togglePin(postId,pinned){
+  await db.from('posts').update({pinned:!pinned}).eq('id',postId)
+  showToast(pinned?'已取消置顶':'已置顶')
+  openPost(postId)
+  loadPosts()
+}
+
+async function delPost(id){
+  if(!confirm('确定删除帖子？'))return
+  await db.from('posts').delete().eq('id',id)
+  showToast('已删除');goBack();loadPosts()
+}
+
+function reportPost(){showToast('举报已提交，感谢反馈')}
+
+function revealContact(el,contact){
+  el.innerHTML=`<div class="contact-label">联系方式</div><div class="contact-val">${contact}</div>`
+}
+
+// IMAGE VIEWER
+function openViewer(idx){
+  const imgEl=event.target
+  const imgs=JSON.parse(imgEl.getAttribute('data-imgs')||'[]')
+  if(!imgs.length)return
+  viewerImgs=imgs;viewerIdx=idx
+  const el=document.getElementById('imgViewer')
+  el.classList.remove('hidden')
+  document.getElementById('viewerImg').src=imgs[idx]
+  document.getElementById('viewerDots').innerHTML=imgs.map((_,i)=>`<div class="img-viewer-dot ${i===idx?'on':''}"></div>`).join('')
+  document.body.style.overflow='hidden'
+}
+function closeViewer(){
+  document.getElementById('imgViewer').classList.add('hidden')
+  document.body.style.overflow=''
+}
+
+// PUBLISH
+function renderTypes(){
+  document.getElementById('typeGrid').innerHTML=TYPES.map(t=>`
+    <div class="type-card ${t.v===pubType?'on':''}" onclick="selType('${t.v}')">
+      <div style="font-size:18px">${t.e}</div>
+      <div class="type-label">${t.l}</div>
+      <div class="type-desc">${t.d}</div>
+    </div>`).join('')
+}
+function selType(v){
+  pubType=v;renderTypes()
+  document.getElementById('carpoolF').classList.toggle('hidden',v!=='carpool')
+  document.getElementById('locationF').classList.toggle('hidden',v==='carpool')
+  document.getElementById('contactF').classList.toggle('hidden',v==='post'||v==='news')
+}
+function onImgSel(e){
+  const files=Array.from(e.target.files).slice(0,3-selImgs.length)
+  selImgs=[...selImgs,...files];renderImgGrid()
+}
+function renderImgGrid(){
+  const el=document.getElementById('pubImgs')
+  if(!el)return
+  el.innerHTML=selImgs.map((f,i)=>`<div style="position:relative"><img class="img-thumb" src="${URL.createObjectURL(f)}"><div class="img-del" onclick="rmImg(${i})">×</div></div>`).join('')
+  if(selImgs.length<3)el.innerHTML+=`<div class="img-add" onclick="document.getElementById('pubImgIn').click()">+</div>`
+}
+function rmImg(i){selImgs.splice(i,1);renderImgGrid()}
+
+async function submitPost(){
+  if(!me){showPg('auth','login');return}
+  const title=document.getElementById('pubTitle').value.trim()
+  if(!title){showToast('请输入标题');return}
+  const btn=document.getElementById('pubBtn');btn.textContent='发布中...';btn.disabled=true
+  const urls=[]
+  for(const f of selImgs){
+    const ext=f.name.split('.').pop()
+    const path=`posts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const{error}=await db.storage.from('images').upload(path,f,{contentType:f.type})
+    if(!error){const{data:u}=db.storage.from('images').getPublicUrl(path);urls.push(u.publicUrl)}
+  }
+  const{error}=await db.from('posts').insert({
+    user_id:me.id,user_name:me.prof?.name||me.email.split('@')[0],user_avatar:me.prof?.avatar||null,
+    type:pubType,title,content:document.getElementById('pubContent').value.trim(),images:urls,
+    contact:document.getElementById('pubContact')?.value.trim()||'',
+    location:document.getElementById('pubLocation')?.value.trim()||'',
+    resort:document.getElementById('pubResort')?.value||'',
+    departure:document.getElementById('pubDep')?.value.trim()||'',
+    trip_date:document.getElementById('pubDate')?.value||'',
+    seats_left:document.getElementById('pubSeats')?.value||''
+  })
+  btn.textContent='发布内容';btn.disabled=false
+  if(error){showToast('发布失败，请重试');return}
+  showToast('发布成功！');selImgs=[];renderImgGrid()
+  document.getElementById('pubTitle').value='';document.getElementById('pubContent').value=''
+  showPg('home');loadPosts()
+}
+
+// AUTH
+function toggleAuth(){
+  authMode=authMode==='login'?'register':'login'
+  const isL=authMode==='login'
+  document.getElementById('authTitle').textContent=isL?'欢迎回来':'创建账号'
+  document.getElementById('authSub').textContent=isL?'登录你的 Ski Share 账号':'加入澳洲华人滑雪社区'
+  document.getElementById('authBtn').textContent=isL?'登录':'注册'
+  document.getElementById('authTogTxt').textContent=isL?'还没有账号？':'已有账号？'
+  document.getElementById('authTogBtn').textContent=isL?'注册':'登录'
+  document.getElementById('forgotLink').classList.toggle('hidden',authMode==='register')
+  document.getElementById('authNameG').classList.toggle('hidden',isL)
+}
+function maskEmail(email){
+  if(!email)return''
+  const[user,domain]=email.split('@')
+  const masked=user.slice(0,2)+'***'
+  return masked+'@'+domain
+}
+async function forgotPassword(){
+  const email=document.getElementById('authEmail').value.trim()
+  if(!email){showToast('请先填写邮箱');return}
+  const{error}=await db.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://skishare.com.au'
+  })
+  if(error){showToast('发送失败：'+error.message);return}
+  showToast('重置邮件已发送，请查收')
+}
+
+function togglePwd(){
+  const i=document.getElementById('authPwd')
+  i.type=i.type==='password'?'text':'password'
+}
+async function doAuth(){
+  const email=document.getElementById('authEmail').value.trim()
+  const pwd=document.getElementById('authPwd').value
+  if(!email||!pwd){showToast('请填写邮箱和密码');return}
+  const btn=document.getElementById('authBtn');btn.textContent='请稍候...';btn.disabled=true
+  if(authMode==='login'){
+    const{data,error}=await db.auth.signInWithPassword({email,password:pwd})
+    if(error){showToast('登录失败：'+error.message);btn.textContent='登录';btn.disabled=false;return}
+    if(data.user){
+      const{data:ex}=await db.from('profiles').select('id').eq('id',data.user.id).single()
+      if(!ex)await db.from('profiles').insert({id:data.user.id,name:email.split('@')[0]})
+    }
+  }else{
+    const name=document.getElementById('authName').value.trim()||email.split('@')[0]
+    const{error}=await db.auth.signUp({email,password:pwd,options:{data:{name}}})
+    if(error){showToast('注册失败：'+error.message);btn.textContent='注册';btn.disabled=false;return}
+    showToast('注册成功！请查收验证邮件后登录')
+    authMode='login';toggleAuth();btn.textContent='登录';btn.disabled=false;return
+  }
+  btn.textContent=authMode==='login'?'登录':'注册';btn.disabled=false
+  showToast('登录成功！');showPg('home')
+}
+
+// NOTIFICATIONS
+async function loadNotifs(){
+  if(!me)return
+  const el=document.getElementById('notifList')
+  el.innerHTML='<div class="empty">加载中...</div>'
+  const{data}=await db.from('notifications').select('*').eq('user_id',me.id).order('created_at',{ascending:false}).limit(50)
+  if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔔</div>暂无通知</div>';return}
+  await db.from('notifications').update({is_read:true}).eq('user_id',me.id).eq('is_read',false)
+  document.getElementById('notifBadge').classList.add('hidden')
+  el.innerHTML=data.map(n=>`<div class="notif-item" onclick="${n.post_id?`openPost('${n.post_id}')`:''}" >
+    <div class="av-sm">${n.sender_avatar?`<img src="${n.sender_avatar}">`:(n.sender_name||'雪')[0]}</div>
+    <div class="notif-body">
+      <div class="notif-name">${n.sender_name||'雪友'} <span style="font-weight:400;color:var(--text)">${n.type==='reply'?'回复了你的评论':'评论了你的帖子'}</span></div>
+      <div class="notif-text">${n.content||''}</div>
+      ${n.post_title?`<div class="notif-post">《${n.post_title}》</div>`:''}
+      <div class="notif-time">${fmtTime(n.created_at)}</div>
+    </div>
+    ${!n.is_read?'<div class="notif-dot"></div>':''}
+  </div>`).join('')
+}
+async function clearNotifs(){
+  if(!me)return
+  await db.from('notifications').delete().eq('user_id',me.id);loadNotifs()
+}
+async function checkUnread(){
+  if(!me)return
+  const{count}=await db.from('notifications').select('*',{count:'exact',head:true}).eq('user_id',me.id).eq('is_read',false)
+  const b=document.getElementById('notifBadge')
+  if(count>0){b.textContent=count>99?'99+':count;b.classList.remove('hidden')}else b.classList.add('hidden')
+}
+
+// MINE
+function renderMine(){
+  const el=document.getElementById('mineWrap')
+  if(!me){
+    el.innerHTML=`<div style="padding:100px 20px;text-align:center"><div style="font-size:48px;margin-bottom:16px">🎿</div><div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">登录后查看个人信息</div><div style="color:var(--muted);margin-bottom:24px;font-size:14px">加入澳洲华人滑雪社区</div><button class="btn btn-p" onclick="showPg('auth','login')">去登录</button></div>`;return
+  }
+  const p=me.prof,name=p?.name||me.email.split('@')[0]
+  el.innerHTML=`
+    <div class="mine-hero">
+      <div class="av-lg" style="cursor:pointer" onclick="document.getElementById('avInput').click()">${p?.avatar?`<img src="${p.avatar}">`:name[0]}</div>
+      <div class="mine-info">
+        <div class="mine-name">${name}</div>
+        <div class="mine-email">${maskEmail(me.email)}</div>
+        <div class="mine-edit-av" onclick="document.getElementById('avInput').click()">点击更换头像</div>
+      </div>
+    </div>
+    <div class="mine-section">
+      <div class="mine-row" onclick="myPosts()"><span class="mine-row-label">我发布的</span><span class="mine-arr">›</span></div>
+      <div class="mine-row" onclick="myFavs()"><span class="mine-row-label">我的收藏</span><span class="mine-arr">›</span></div>
+      <div class="mine-row" onclick="editName()"><span class="mine-row-label">修改昵称</span><span class="mine-arr">›</span></div>
+    </div>
+    <div class="mine-section">
+      <div class="mine-row" onclick="signOut()"><span class="mine-row-label" style="color:var(--red)">退出登录</span></div>
+    </div>
+    <div class="mine-section">
+      <div class="mine-row" onclick="document.getElementById('disclaimerModal').classList.remove('hidden')"><span class="mine-row-label" style="color:var(--muted)">免责声明与用户协议</span><span class="mine-arr">›</span></div>
+    </div>`
+}
+
+async function uploadAvatar(e){
+  if(!me)return
+  const file=e.target.files[0];if(!file)return
+  showToast('上传中...')
+  const path=`avatars/${me.id}.${file.name.split('.').pop()}`
+  const{error}=await db.storage.from('images').upload(path,file,{contentType:file.type,upsert:true})
+  if(error){showToast('上传失败');return}
+  const{data:u}=db.storage.from('images').getPublicUrl(path)
+  await db.from('profiles').update({avatar:u.publicUrl}).eq('id',me.id)
+  await loadMe();showToast('头像已更新');renderMine()
+}
+
+async function editName(){
+  const name=prompt('输入新昵称：',me.prof?.name||'')
+  if(!name||!name.trim())return
+  await db.from('profiles').update({name:name.trim()}).eq('id',me.id)
+  await loadMe();showToast('昵称已更新');renderMine()
+}
+
+async function myPosts(){
+  const{data}=await db.from('posts').select('*').eq('user_id',me.id).order('created_at',{ascending:false})
+  posts=data||[];offset=0;more=false;renderPosts();showPg('home')
+  document.getElementById('searchInput').value='我的帖子'
+}
+async function myFavs(){
+  const{data}=await db.from('favorites').select('post_id').eq('user_id',me.id)
+  if(!data||!data.length){showToast('暂无收藏');return}
+  const ids=data.map(f=>f.post_id)
+  const{data:fp}=await db.from('posts').select('*').in('id',ids)
+  posts=fp||[];renderPosts();showPg('home')
+  document.getElementById('searchInput').value='我的收藏'
+}
+async function signOut(){await db.auth.signOut();me=null;updateNav();showPg('home');showToast('已退出登录')}
+
+// PROFILE PAGE
+async function openProfile(uid,name,avatar){
+  prevPg=curPg;showPg('profile')
+  const el=document.getElementById('profileWrap')
+  el.innerHTML=`<div class="profile-hero"><div class="av-lg">${avatar?`<img src="${avatar}">`:name[0]}</div><div class="profile-name">${name}</div></div><div id="profPosts" style="padding:10px"><div class="empty">加载中...</div></div>`
+  const{data}=await db.from('posts').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(50)
+  const ps=data||[]
+  const el2=document.getElementById('profPosts')
+  if(!ps.length){el2.innerHTML='<div class="empty"><div class="empty-icon">🎿</div>还没有发布内容</div>';return}
+  const L=ps.filter((_,i)=>i%2===0),R=ps.filter((_,i)=>i%2!==0)
+  el2.innerHTML=`<div class="grid"><div class="col">${L.map(mkCard).join('')}</div><div class="col">${R.map(mkCard).join('')}</div></div>`
+}
+
+// NAV
+function showPg(pg,mode){
+  document.querySelectorAll('[id^="pg-"]').forEach(e=>e.classList.add('hidden'))
+  document.querySelectorAll('.bn').forEach(e=>e.classList.remove('on'))
+  document.getElementById(`pg-${pg}`)?.classList.remove('hidden')
+  // 只有主tab页才高亮底部导航
+  if(['home','publish','notifications','mine'].includes(pg)){
+    document.getElementById(`bn-${pg}`)?.classList.add('on')
+  }
+  curPg=pg
+  // 评论输入框只在detail页显示
+  const cmtWrap=document.getElementById('cmtInputWrap')
+  if(cmtWrap)cmtWrap.style.display=pg==='detail'?'block':'none'
+  if(pg==='notifications')loadNotifs()
+  if(pg==='mine')renderMine()
+  if(pg==='publish'){selImgs=[];renderImgGrid();selType('post')}
+  if(pg==='auth'){authMode='login';if(mode==='register'){authMode='register';toggleAuth()}else{document.getElementById('authTitle').textContent='欢迎回来';document.getElementById('authSub').textContent='登录你的 Ski Share 账号';document.getElementById('authBtn').textContent='登录';document.getElementById('authTogTxt').textContent='还没有账号？';document.getElementById('authTogBtn').textContent='注册';document.getElementById('authNameG').classList.add('hidden')}}
+  window.scrollTo(0,0)
+}
+
+function goBack(){showPg(prevPg||'home')}
+function requireAuth(fn){if(!me){showPg('auth','login');return}fn()}
+
+// UTILS
+function fmtTime(ts){if(!ts)return'';const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()}`}
+function esc(s){return(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+function showToast(msg){const e=document.createElement('div');e.className='toast';e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),2500)}
+
+setInterval(()=>{if(me)checkUnread()},30000)
+
+// ===== PWA INSTALL =====
+let deferredPrompt=null
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e
+  if(!localStorage.getItem('installDismissed')){
+    setTimeout(()=>document.getElementById('installBanner').classList.remove('hidden'),3000)
+  }
+})
+function doInstall(){
+  if(!deferredPrompt)return
+  deferredPrompt.prompt()
+  deferredPrompt.userChoice.then(()=>{deferredPrompt=null;dismissInstall()})
+}
+function dismissInstall(){
+  document.getElementById('installBanner').classList.add('hidden')
+  localStorage.setItem('installDismissed','1')
+}
+
+// ===== BACK TO TOP =====
+window.addEventListener('scroll',()=>{
+  document.getElementById('backTop').classList.toggle('show',window.scrollY>300)
+})
+
+// ===== SKELETON LOADING =====
+function showSkeleton(){
+  const el=document.getElementById('feedGrid')
+  const col=Array(4).fill(`<div class="skel-card"><div class="skel skel-img"></div><div class="skel skel-line"></div><div class="skel skel-line short"></div></div>`).join('')
+  el.innerHTML=`<div class="grid"><div class="col">${col}</div><div class="col">${col}</div></div>`
+}
+
+// ===== SEARCH HISTORY =====
+function getSearchHistory(){return JSON.parse(localStorage.getItem('searchHistory')||'[]')}
+function addSearchHistory(kw){
+  if(!kw.trim())return
+  let h=getSearchHistory().filter(x=>x!==kw)
+  h.unshift(kw);h=h.slice(0,8)
+  localStorage.setItem('searchHistory',JSON.stringify(h))
+}
+function showSearchHistory(){
+  const h=getSearchHistory()
+  const el=document.getElementById('searchHistory')
+  const kw=document.getElementById('searchInput').value.trim()
+  if(!h.length||kw){el.classList.add('hidden');return}
+  el.innerHTML=h.map(x=>`<div class="sh-item" onclick="useHistory('${esc(x)}')">🕐 ${x}</div>`).join('')+`<div class="sh-clear" onclick="clearHistory()">清除搜索历史</div>`
+  el.classList.remove('hidden')
+}
+function hideSearchHistory(){document.getElementById('searchHistory').classList.add('hidden')}
+function useHistory(kw){
+  document.getElementById('searchInput').value=kw
+  hideSearchHistory();offset=0;posts=[];loadPosts()
+}
+function clearHistory(){
+  localStorage.removeItem('searchHistory')
+  hideSearchHistory()
+}
+
+// ===== SHARE POST =====
+async function sharePost(id,title){
+  const url=`https://skishare.com.au?post=${id}`
+  if(navigator.share){
+    await navigator.share({title:'Ski Share - '+title,url})
+  }else{
+    await navigator.clipboard.writeText(url)
+    showToast('链接已复制')
+  }
+}
+
+// ===== EDIT POST =====
+async function editPost(id){
+  const{data:p}=await db.from('posts').select('*').eq('id',id).maybeSingle()
+  if(!p)return
+  const newTitle=prompt('修改标题：',p.title)
+  if(newTitle===null)return
+  const newContent=prompt('修改内容：',p.content)
+  if(newContent===null)return
+  await db.from('posts').update({title:newTitle.trim(),content:newContent.trim()}).eq('id',id)
+  showToast('已保存')
+  openPost(id)
+}
+
+// ===== PULL TO REFRESH =====
+let ptStartY=0,ptPulling=false
+document.addEventListener('touchstart',e=>{
+  if(window.scrollY===0&&curPg==='home')ptStartY=e.touches[0].clientY
+},{passive:true})
+document.addEventListener('touchend',e=>{
+  if(ptPulling){
+    ptPulling=false
+    offset=0;posts=[];loadPosts()
+  }
+  ptStartY=0
+},{passive:true})
+document.addEventListener('touchmove',e=>{
+  if(ptStartY>0&&window.scrollY===0&&curPg==='home'){
+    const dy=e.touches[0].clientY-ptStartY
+    if(dy>60){ptPulling=true}
+  }
+},{passive:true})
+</script>
+</body>
+</html>
