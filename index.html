@@ -731,16 +731,38 @@ function renderImgGrid(){
 }
 function rmImg(i){selImgs.splice(i,1);renderImgGrid()}
 
+// 压缩图片
+function compressImage(file){
+  return new Promise(resolve=>{
+    const img=new Image()
+    const url=URL.createObjectURL(file)
+    img.onload=()=>{
+      const MAX=1200
+      let w=img.width,h=img.height
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX}
+      const canvas=document.createElement('canvas')
+      canvas.width=w;canvas.height=h
+      canvas.getContext('2d').drawImage(img,0,0,w,h)
+      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.7)
+      URL.revokeObjectURL(url)
+    }
+    img.onerror=()=>resolve(file)
+    img.src=url
+  })
+}
+
 async function submitPost(){
   if(!me){showPg('auth','login');return}
   const title=document.getElementById('pubTitle').value.trim()
   if(!title){showToast('请输入标题');return}
-  const btn=document.getElementById('pubBtn');btn.textContent='发布中...';btn.disabled=true
+  const btn=document.getElementById('pubBtn');btn.textContent='压缩图片中...';btn.disabled=true
   const urls=[]
-  for(const f of selImgs){
-    const ext=f.name.split('.').pop()
+  for(let i=0;i<selImgs.length;i++){
+    btn.textContent=`上传图片 ${i+1}/${selImgs.length}...`
+    const compressed=await compressImage(selImgs[i])
+    const ext='jpg'
     const path=`posts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const{error}=await db.storage.from('images').upload(path,f,{contentType:f.type})
+    const{error}=await db.storage.from('images').upload(path,compressed,{contentType:'image/jpeg'})
     if(!error){const{data:u}=db.storage.from('images').getPublicUrl(path);urls.push(u.publicUrl)}
   }
   const{error}=await db.from('posts').insert({
@@ -942,7 +964,10 @@ function showPg(pg,mode){
   window.scrollTo(0,0)
 }
 
-function goBack(){showPg(prevPg||'home')}
+function goBack(){
+  document.getElementById('searchInput').value=''
+  showPg(prevPg||'home')
+}
 function requireAuth(fn){if(!me){showPg('auth','login');return}fn()}
 
 // UTILS
