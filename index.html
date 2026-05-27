@@ -79,6 +79,8 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .card-desc{font-size:11px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
 .card-price{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:5px}
 .card-meta{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:8px}
+.card-route{font-size:13px;font-weight:800;color:var(--navy);line-height:1.35;margin-bottom:5px}
+.card-info{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}
 .card-foot{display:flex;align-items:center;gap:6px}
 .av-xs{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
 .av-xs img,.av-sm img,.av-md img,.av-lg img{width:100%;height:100%;object-fit:cover}
@@ -335,9 +337,11 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
     <div class="form-g"><label class="form-l">详细内容</label><textarea class="form-t" id="pubContent" placeholder="分享更多详情..."></textarea></div>
     <div id="carpoolF" class="hidden">
       <div class="form-g"><label class="form-l">出发日期</label><input class="form-i" type="date" id="pubDate"></div>
-      <div class="form-g"><label class="form-l">出发地</label><input class="form-i" id="pubDep" placeholder="例如 Sydney"></div>
-      <div class="form-g"><label class="form-l">目标雪场</label><select class="form-s" id="pubResort"><option value="">选择雪场</option><option>Perisher</option><option>Thredbo</option><option>Falls Creek</option><option>Mt Buller</option><option>Hotham</option></select></div>
-      <div class="form-g"><label class="form-l">还缺几人</label><input class="form-i" type="number" id="pubSeats" placeholder="例如 2"></div>
+      <div class="form-g"><label class="form-l">出发时间</label><input class="form-i" type="time" id="pubDepartTime"></div>
+      <div class="form-g"><label class="form-l">出发地</label><input class="form-i" id="pubDep" placeholder="例如 Sydney / Chatswood"></div>
+      <div class="form-g"><label class="form-l">目的雪场</label><select class="form-s" id="pubResort"><option value="">选择雪场</option><option>Perisher</option><option>Thredbo</option><option>Falls Creek</option><option>Mt Buller</option><option>Hotham</option><option>Ben Lomond</option><option>Other</option></select></div>
+      <div class="form-g"><label class="form-l">空位人数</label><input class="form-i" type="number" min="1" id="pubSeats" placeholder="例如 2"></div>
+      <div class="form-g"><label class="form-l">费用分摊</label><input class="form-i" id="pubCostShare" placeholder="例如 AA油费 / $80 每人 / 免费"></div>
     </div>
     <div id="secondhandF" class="hidden">
       <div class="form-g"><label class="form-l">二手分类</label><select class="form-s" id="pubSubcategory"><option value="">选择分类</option><option value="snowboard">单板</option><option value="ski">双板</option><option value="clothing">雪服</option><option value="helmet">头盔</option><option value="goggles">雪镜</option><option value="boots">雪鞋</option><option value="bindings">固定器</option><option value="other">其他</option></select></div>
@@ -346,7 +350,14 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">所在城市</label><select class="form-s" id="pubCity"><option value="">选择城市</option><option value="Sydney">Sydney</option><option value="Melbourne">Melbourne</option><option value="Canberra">Canberra</option><option value="Jindabyne">Jindabyne</option><option value="Brisbane">Brisbane</option><option value="Adelaide">Adelaide</option><option value="Perth">Perth</option><option value="Hobart">Hobart</option><option value="Other">其他</option></select></div>
     </div>
     <div id="roomF" class="hidden">
-      <div class="form-g"><label class="form-l">拼房地点</label><select class="form-s" id="pubRoomLocation"><option value="">选择住宿地点</option><option value="Jindabyne">Jindabyne</option><option value="East Jindabyne">East Jindabyne</option><option value="Cooma">Cooma</option><option value="Berridale">Berridale</option><option value="Crackenback">Crackenback</option><option value="Thredbo Village">Thredbo Village</option><option value="Bullocks Flat">Bullocks Flat</option><option value="Canberra">Canberra</option><option value="Other">其他</option></select></div>
+      <div class="form-g"><label class="form-l">目标雪场</label><select class="form-s" id="pubRoomResort"><option value="">选择雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select></div>
+      <div class="form-g"><label class="form-l">住宿地点</label><input class="form-i" id="pubRoomLocation" placeholder="例如 Jindabyne / Cooma / Mansfield"></div>
+      <div class="form-g"><label class="form-l">入住日期</label><input class="form-i" type="date" id="pubCheckin"></div>
+      <div class="form-g"><label class="form-l">退房日期</label><input class="form-i" type="date" id="pubCheckout"></div>
+      <div class="form-g"><label class="form-l">还缺几人</label><input class="form-i" type="number" min="1" id="pubRoomPeople" placeholder="例如 2"></div>
+      <div class="form-g"><label class="form-l">预算（每晚 AUD）</label><input class="form-i" type="number" min="0" step="1" id="pubRoomBudget" placeholder="例如 120"></div>
+      <div class="form-g"><label class="form-l">性别偏好</label><select class="form-s" id="pubGenderPref"><option value="">无特殊偏好</option><option value="female">女生优先</option><option value="male">男生优先</option><option value="couple">情侣/两人优先</option><option value="any">不限</option></select></div>
+      <div class="form-g"><label class="form-l">是否接受混住</label><select class="form-s" id="pubMixedOk"><option value="">请选择</option><option value="yes">接受混住</option><option value="no">不接受混住</option><option value="depends">看情况</option></select></div>
     </div>
     <div id="locationF" class="hidden"><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
     <div id="contactF"><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
@@ -444,14 +455,16 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
-let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomLocation='all',posts=[],offset=0,pgSize=10,more=false
+let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=10,more=false
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
 let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
 const MAX_IMAGE_SIZE=10*1024*1024
 const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp']
 
 const SECONDHAND_CATS={snowboard:'单板',ski:'双板',clothing:'雪服',helmet:'头盔',goggles:'雪镜',boots:'雪鞋',bindings:'固定器',other:'其他'}
-const ROOM_LOCATIONS={'Jindabyne':'Jindabyne','East Jindabyne':'East Jindabyne','Cooma':'Cooma','Berridale':'Berridale','Crackenback':'Crackenback','Thredbo Village':'Thredbo Village','Bullocks Flat':'Bullocks Flat','Canberra':'Canberra','Other':'其他'}
+const ROOM_RESORTS={'Perisher':'Perisher','Thredbo':'Thredbo','Mt Buller':'Mt Buller','Falls Creek':'Falls Creek','Hotham':'Hotham','Ben Lomond':'Ben Lomond','Other':'其他'}
+const GENDER_PREFS={female:'女生优先',male:'男生优先',couple:'情侣/两人优先',any:'不限'}
+const MIXED_OK={yes:'接受混住',no:'不接受混住',depends:'看情况'}
 const SECONDHAND_CONDITIONS={new:'全新',like_new:'95新',excellent:'9新',good:'8新',used:'有使用痕迹',other:'其他'}
 const TABS=[{l:'推荐',v:'all'},{l:'拼车',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
 const TYPES=[{l:'拼车',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
@@ -493,7 +506,7 @@ function renderTabs(){
 function chTab(v){
   curTab=v
   if(v!=='secondhand')curSecondhandCat='all'
-  if(v!=='room')curRoomLocation='all'
+  if(v!=='room')curRoomResort='all'
   offset=0;posts=[]
   renderTabs();renderSecondhandCats();renderRoomCats();loadPosts()
 }
@@ -509,10 +522,10 @@ function renderRoomCats(){
   const el=document.getElementById('roomCats');if(!el)return
   el.classList.toggle('hidden',curTab!=='room')
   if(curTab!=='room'){el.innerHTML='';return}
-  const cats=[['all','全部'],...Object.entries(ROOM_LOCATIONS)]
-  el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curRoomLocation===v?'on':''}" onclick="chRoomLocation('${v}')">${l}</button>`).join('')}</div>`
+  const cats=[['all','全部'],...Object.entries(ROOM_RESORTS)]
+  el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curRoomResort===v?'on':''}" onclick="chRoomResort('${v}')">${l}</button>`).join('')}</div>`
 }
-function chRoomLocation(v){curRoomLocation=v;offset=0;posts=[];renderRoomCats();loadPosts()}
+function chRoomResort(v){curRoomResort=v;offset=0;posts=[];renderRoomCats();loadPosts()}
 
 // LOAD POSTS
 async function loadPosts(){
@@ -533,7 +546,7 @@ async function loadPosts(){
       if(curSecondhandCat&&curSecondhandCat!=='all')q=q.eq('subcategory',curSecondhandCat)
     }else if(curTab==='room'){
       q=q.eq('type','room')
-      if(curRoomLocation&&curRoomLocation!=='all')q=q.eq('room_location',curRoomLocation)
+      if(curRoomResort&&curRoomResort!=='all')q=q.eq('room_resort',curRoomResort)
     }else{
       q=q.eq('type',curTab)
     }
@@ -569,11 +582,13 @@ function mkCard(p){
       ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
       ${p.type==='secondhand'&&p.subcategory?`<div class="card-tag">${SECONDHAND_CATS[p.subcategory]||'二手'}</div>`:''}
-      ${p.type==='room'&&p.room_location?`<div class="card-tag">${ROOM_LOCATIONS[p.room_location]||p.room_location}</div>`:''}
+      ${p.type==='room'&&p.room_resort?`<div class="card-tag">${ROOM_RESORTS[p.room_resort]||p.room_resort}</div>`:''}
       ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
     </div>
     <div class="card-body">
       <div class="card-title">${safe(p.title||'')}</div>
+      ${p.type==='carpool'?`<div class="card-route">${safe(p.departure||'出发地')} → ${safe(p.resort||'雪场')}</div><div class="card-info">${[p.trip_date,formatTimeShort(p.depart_time),p.seats_left?`缺${p.seats_left}人`:'',p.cost_share].filter(Boolean).map(safe).join(' · ')}</div>`:''}
+      ${p.type==='room'?`<div class="card-route">${safe(p.room_resort||'雪场')} · ${safe(p.room_location||'住宿地点')}</div><div class="card-info">${[dateRange(p.checkin_date,p.checkout_date),p.room_budget?fmtPrice(p.room_budget)+'/晚':'',p.room_people?`缺${p.room_people}人`:'',GENDER_PREFS[p.gender_pref],MIXED_OK[p.mixed_ok]].filter(Boolean).map(safe).join(' · ')}</div>`:''}
       ${p.type==='secondhand'?`<div class="card-price">${fmtPrice(p.price)}</div><div class="card-meta">${[SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(safe).join(' · ')}</div>`:''}
       <div class="card-desc">${safe(p.content||'')}</div>
       <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
@@ -625,9 +640,20 @@ async function openPost(id){
       </div>
       ${p.type==='carpool'?`<div class="trip-box">
         ${p.trip_date?`<div class="trip-row">📅 ${safe(p.trip_date)}</div>`:''}
+        ${p.depart_time?`<div class="trip-row">⏰ ${safe(formatTimeShort(p.depart_time))}</div>`:''}
         ${p.departure?`<div class="trip-row">📍 ${safe(p.departure)}</div>`:''}
         ${p.resort?`<div class="trip-row">🎿 ${safe(p.resort)}</div>`:''}
-        ${p.seats_left?`<div class="trip-row">👥 缺 ${safe(p.seats_left)} 人</div>`:''}
+        ${p.seats_left?`<div class="trip-row">👥 空位/缺 ${safe(p.seats_left)} 人</div>`:''}
+        ${p.cost_share?`<div class="trip-row">💰 ${safe(p.cost_share)}</div>`:''}
+      </div>`:''}
+      ${p.type==='room'?`<div class="trip-box">
+        ${p.room_resort?`<div class="trip-row">🎿 ${safe(ROOM_RESORTS[p.room_resort]||p.room_resort)}</div>`:''}
+        ${p.room_location?`<div class="trip-row">📍 ${safe(p.room_location)}</div>`:''}
+        ${p.checkin_date||p.checkout_date?`<div class="trip-row">📅 ${safe(dateRange(p.checkin_date,p.checkout_date))}</div>`:''}
+        ${p.room_budget?`<div class="trip-row">💰 ${fmtPrice(p.room_budget)} / 晚</div>`:''}
+        ${p.room_people?`<div class="trip-row">👥 缺 ${safe(p.room_people)} 人</div>`:''}
+        ${p.gender_pref?`<div class="trip-row">🚻 ${safe(GENDER_PREFS[p.gender_pref]||p.gender_pref)}</div>`:''}
+        ${p.mixed_ok?`<div class="trip-row">🏠 ${safe(MIXED_OK[p.mixed_ok]||p.mixed_ok)}</div>`:''}
       </div>`:''}
       ${p.type==='secondhand'?`<div class="trip-box">
         <div class="trip-row">💰 ${fmtPrice(p.price)}</div>
@@ -896,12 +922,35 @@ async function submitPost(){
   const price=priceRaw===''?null:Number(priceRaw)
   const itemCondition=document.getElementById('pubCondition')?.value||''
   const city=document.getElementById('pubCity')?.value||''
-  const roomLocation=document.getElementById('pubRoomLocation')?.value||''
+  const departTime=document.getElementById('pubDepartTime')?.value||''
+  const costShare=document.getElementById('pubCostShare')?.value.trim()||''
+  const roomResort=document.getElementById('pubRoomResort')?.value||''
+  const roomLocation=document.getElementById('pubRoomLocation')?.value.trim()||''
+  const checkinDate=document.getElementById('pubCheckin')?.value||''
+  const checkoutDate=document.getElementById('pubCheckout')?.value||''
+  const roomPeople=document.getElementById('pubRoomPeople')?.value||''
+  const roomBudgetRaw=document.getElementById('pubRoomBudget')?.value||''
+  const roomBudget=roomBudgetRaw===''?null:Number(roomBudgetRaw)
+  const genderPref=document.getElementById('pubGenderPref')?.value||''
+  const mixedOk=document.getElementById('pubMixedOk')?.value||''
+  if(pubType==='carpool'&&!document.getElementById('pubDep')?.value.trim()){showToast('请输入出发地');return}
+  if(pubType==='carpool'&&!document.getElementById('pubResort')?.value){showToast('请选择目的雪场');return}
+  if(pubType==='carpool'&&!document.getElementById('pubDate')?.value){showToast('请选择出发日期');return}
+  if(pubType==='carpool'&&!departTime){showToast('请选择出发时间');return}
+  if(pubType==='carpool'&&!document.getElementById('pubSeats')?.value){showToast('请输入空位人数');return}
+  if(pubType==='carpool'&&!costShare){showToast('请输入费用分摊');return}
   if(pubType==='secondhand'&&!subcategory){showToast('请选择二手分类');return}
   if(pubType==='secondhand'&&(price===null||Number.isNaN(price)||price<0)){showToast('请输入有效价格');return}
   if(pubType==='secondhand'&&!itemCondition){showToast('请选择新旧程度');return}
   if(pubType==='secondhand'&&!city){showToast('请选择所在城市');return}
-  if(pubType==='room'&&!roomLocation){showToast('请选择拼房地点');return}
+  if(pubType==='room'&&!roomResort){showToast('请选择目标雪场');return}
+  if(pubType==='room'&&!roomLocation){showToast('请输入住宿地点');return}
+  if(pubType==='room'&&!checkinDate){showToast('请选择入住日期');return}
+  if(pubType==='room'&&!checkoutDate){showToast('请选择退房日期');return}
+  if(pubType==='room'&&checkinDate&&checkoutDate&&checkoutDate<=checkinDate){showToast('退房日期要晚于入住日期');return}
+  if(pubType==='room'&&!roomPeople){showToast('请输入还缺几人');return}
+  if(pubType==='room'&&(roomBudget===null||Number.isNaN(roomBudget)||roomBudget<0)){showToast('请输入有效预算');return}
+  if(pubType==='room'&&!mixedOk){showToast('请选择是否接受混住');return}
   for(const f of selImgs){
     if(!ALLOWED_IMAGE_TYPES.includes(f.type)||f.size>MAX_IMAGE_SIZE){showToast('图片格式或大小不符合要求');return}
   }
@@ -923,13 +972,22 @@ async function submitPost(){
       price:pubType==='secondhand'?price:null,
       item_condition:pubType==='secondhand'?itemCondition:null,
       city:pubType==='secondhand'?city:null,
+      room_resort:pubType==='room'?roomResort:null,
       room_location:pubType==='room'?roomLocation:null,
+      checkin_date:pubType==='room'?checkinDate:null,
+      checkout_date:pubType==='room'?checkoutDate:null,
+      room_people:pubType==='room'?roomPeople:null,
+      room_budget:pubType==='room'?roomBudget:null,
+      gender_pref:pubType==='room'?genderPref:null,
+      mixed_ok:pubType==='room'?mixedOk:null,
       contact:document.getElementById('pubContact')?.value.trim()||'',
       location:document.getElementById('pubLocation')?.value.trim()||'',
       resort:document.getElementById('pubResort')?.value||'',
       departure:document.getElementById('pubDep')?.value.trim()||'',
       trip_date:document.getElementById('pubDate')?.value||'',
-      seats_left:document.getElementById('pubSeats')?.value||''
+      depart_time:pubType==='carpool'?departTime:null,
+      seats_left:document.getElementById('pubSeats')?.value||'',
+      cost_share:pubType==='carpool'?costShare:null
     })
     if(error)throw error
 
@@ -941,7 +999,9 @@ async function submitPost(){
     const priceInput=document.getElementById('pubPrice');if(priceInput)priceInput.value=''
     const conditionInput=document.getElementById('pubCondition');if(conditionInput)conditionInput.value=''
     const cityInput=document.getElementById('pubCity');if(cityInput)cityInput.value=''
+    const roomResortInput=document.getElementById('pubRoomResort');if(roomResortInput)roomResortInput.value=''
     const roomLocationInput=document.getElementById('pubRoomLocation');if(roomLocationInput)roomLocationInput.value=''
+    ;['pubDepartTime','pubCostShare','pubCheckin','pubCheckout','pubRoomPeople','pubRoomBudget','pubGenderPref','pubMixedOk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
     showPg('home');loadPosts()
   }catch(err){
     console.error(err)
@@ -1293,6 +1353,14 @@ function fmtPrice(v){
   const n=Number(v)
   if(Number.isNaN(n))return safe(String(v))
   return '$'+Math.round(n).toLocaleString('en-AU')
+}
+function formatTimeShort(t){
+  if(!t)return''
+  return String(t).slice(0,5)
+}
+function dateRange(a,b){
+  if(a&&b)return `${a} 至 ${b}`
+  return a||b||''
 }
 
 // ===== EDIT POST =====
