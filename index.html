@@ -474,6 +474,30 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .publish-section-title{font-size:16px!important}
 .publish-section-title .publish-section-sub{font-size:11px!important}
 
+
+
+/* Publish page emoji restored */
+.type-card > div:first-child{
+  display:block!important;
+  min-width:0!important;
+  height:auto!important;
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  font-size:24px!important;
+  line-height:1.1!important;
+  letter-spacing:0!important;
+  margin-bottom:6px!important;
+  font-family:'Noto Sans SC',sans-serif!important;
+}
+
+
+/* V14.2 VIEWER NAV */
+.img-viewer-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px)}
+.img-viewer-arrow.left{left:14px}.img-viewer-arrow.right{right:14px}
+.img-viewer-count{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.35);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+
 </style>
 </head>
 <body>
@@ -640,8 +664,11 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 <!-- IMAGE VIEWER -->
 <div id="imgViewer" class="img-viewer hidden">
   <div class="img-viewer-close" onclick="closeViewer()">✕</div>
+  <button class="img-viewer-arrow left" onclick="prevViewerImg(event)">‹</button>
   <img id="viewerImg" src="">
+  <button class="img-viewer-arrow right" onclick="nextViewerImg(event)">›</button>
   <div class="img-viewer-nav" id="viewerDots"></div>
+  <div class="img-viewer-count" id="viewerCount"></div>
 </div>
 
 <!-- AVATAR UPLOAD -->
@@ -691,10 +718,10 @@ const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
 let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=10,more=false
-let listContext=null,prevListContext=null
+let listContext=null,prevListContext=null,pendingAuthAction=null
 let hideExpired=true
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
-let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
+let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,viewerTouchX=0,prevPg='home'
 const MAX_IMAGE_SIZE=10*1024*1024
 const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp']
 
@@ -704,7 +731,7 @@ const GENDER_PREFS={female:'女生优先',male:'男生优先',couple:'情侣/两
 const MIXED_OK={yes:'接受混住',no:'不接受混住',depends:'看情况'}
 const SECONDHAND_CONDITIONS={new:'全新',like_new:'95新',excellent:'9新',good:'8新',used:'有使用痕迹',other:'其他'}
 const TABS=[{l:'推荐',v:'all'},{l:'拼车',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
-const TYPES=[{l:'拼车',v:'carpool',d:'一起去雪场',e:'CAR'},{l:'拼房',v:'room',d:'分摊住宿',e:'STAY'},{l:'二手',v:'secondhand',d:'雪具交易',e:'GEAR'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'POST'},{l:'雪场动态',v:'news',d:'SNOW REPORT',e:'SNOW'}]
+const TYPES=[{l:'拼车',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
 const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
 const EMOJI={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
 const TYPE_LABELS={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
@@ -1125,7 +1152,7 @@ function replyTo(cid,name,rootId){
 function cancelReply(){replyId=null;replyName=null;document.getElementById('replyHint').classList.add('hidden')}
 
 async function sendComment(){
-  if(!me){showPg('auth','login');return}
+  if(!me)return requireAuth(()=>openPost(curPostId))
   if(!canDoAction('comment',5000)){showToast('评论太频繁，请稍后再试');return}
   const txt=document.getElementById('cmtInput').value.trim()
   if(!txt)return
@@ -1155,14 +1182,14 @@ async function sendNotif(uid,type,content){
 async function delCmt(id){if(!confirm('确定删除？'))return;await db.from('comments').delete().eq('id',id);openPost(curPostId)}
 
 async function toggleFav(postId,isFav){
-  if(!me){showPg('auth','login');return}
+  if(!me)return requireAuth(()=>openPost(postId))
   if(isFav)await db.from('favorites').delete().eq('user_id',me.id).eq('post_id',postId)
   else await db.from('favorites').insert({user_id:me.id,post_id:postId})
   openPost(postId)
 }
 
 async function toggleLike(postId,isLiked){
-  if(!me){showPg('auth','login');return}
+  if(!me)return requireAuth(()=>openPost(postId))
   const btn=document.getElementById('likeBtn')
   if(btn)btn.disabled=true
   let error=null
@@ -1173,6 +1200,7 @@ async function toggleLike(postId,isLiked){
   }
   if(error){showToast('操作失败，请确认 likes 表和 RLS 已配置');if(btn)btn.disabled=false;return}
   await loadMe()
+  showToast(isLiked?'已取消点赞':'点赞成功')
   openPost(postId);loadPosts()
 }
 
@@ -1206,7 +1234,7 @@ async function delPost(id){
 }
 
 async function reportPost(postId){
-  if(!me){showPg('auth','login');return}
+  if(!me)return requireAuth(()=>openPost(postId))
   if(!canDoAction('report',60000)){showToast('举报太频繁，请稍后再试');return}
   const preset=prompt('请选择或填写举报原因：\n1 诈骗/虚假信息\n2 骚扰/辱骂\n3 违法内容\n4 垃圾广告\n5 其他','1')
   if(preset===null)return
@@ -1219,7 +1247,7 @@ async function reportPost(postId){
 }
 
 async function revealContact(el,contact){
-  if(!me){showToast('登录后可查看联系方式');showPg('auth','login');return}
+  if(!me){showToast('登录后可查看联系方式');return requireAuth(()=>openPost(curPostId))}
   if(!canDoAction('contact',3000)){showToast('操作太频繁');return}
   const val=String(contact||'').trim()
   if(!val){showToast('暂无联系方式');return}
@@ -1232,18 +1260,34 @@ function openViewer(idx){
   const imgEl=event.target
   let imgs=[]
   try{imgs=JSON.parse(imgEl.getAttribute('data-imgs')||'[]')}catch{imgs=[]}
+  imgs=imgs.filter(Boolean)
   if(!imgs.length)return
-  viewerImgs=imgs;viewerIdx=idx
+  viewerImgs=imgs;viewerIdx=Math.max(0,Math.min(idx,imgs.length-1))
   const el=document.getElementById('imgViewer')
   el.classList.remove('hidden')
-  document.getElementById('viewerImg').src=imgs[idx]
-  document.getElementById('viewerDots').innerHTML=imgs.map((_,i)=>`<div class="img-viewer-dot ${i===idx?'on':''}"></div>`).join('')
+  updateViewerImg()
   document.body.style.overflow='hidden'
 }
+function updateViewerImg(){
+  if(!viewerImgs.length)return
+  viewerIdx=(viewerIdx+viewerImgs.length)%viewerImgs.length
+  document.getElementById('viewerImg').src=viewerImgs[viewerIdx]
+  document.getElementById('viewerDots').innerHTML=viewerImgs.map((_,i)=>`<div class="img-viewer-dot ${i===viewerIdx?'on':''}"></div>`).join('')
+  const cnt=document.getElementById('viewerCount')
+  if(cnt)cnt.textContent=`${viewerIdx+1} / ${viewerImgs.length}`
+  document.querySelectorAll('.img-viewer-arrow').forEach(b=>b.style.display=viewerImgs.length>1?'flex':'none')
+}
+function nextViewerImg(e){if(e)e.stopPropagation();if(viewerImgs.length>1){viewerIdx++;updateViewerImg()}}
+function prevViewerImg(e){if(e)e.stopPropagation();if(viewerImgs.length>1){viewerIdx--;updateViewerImg()}}
 function closeViewer(){
   document.getElementById('imgViewer').classList.add('hidden')
   document.body.style.overflow=''
 }
+document.getElementById('imgViewer')?.addEventListener('touchstart',e=>{viewerTouchX=e.touches[0].clientX},{passive:true})
+document.getElementById('imgViewer')?.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-viewerTouchX
+  if(Math.abs(dx)>45){dx<0?nextViewerImg(e):prevViewerImg(e)}
+},{passive:true})
 
 // PUBLISH
 function renderTypes(){
@@ -1317,7 +1361,7 @@ async function uploadOneImage(file,index,total,onProgress){
 }
 
 async function submitPost(){
-  if(!me){showPg('auth','login');return}
+  if(!me)return requireAuth(()=>showPg('publish'))
   if(!canDoAction('post',60000)){showToast('发布太频繁，请稍后再试');return}
   const title=document.getElementById('pubTitle').value.trim()
   if(!title){showToast('请输入标题');return}
@@ -1373,7 +1417,7 @@ async function submitPost(){
       : []
 
     btn.textContent='保存帖子中...'
-    const{error}=await db.from('posts').insert({
+    const{data:newPost,error}=await db.from('posts').insert({
       user_id:me.id,user_name:me.prof?.name||me.email.split('@')[0],user_avatar:me.prof?.avatar||null,
       type:pubType,title,content,images:urls,subcategory,
       price:pubType==='secondhand'?price:null,
@@ -1395,10 +1439,11 @@ async function submitPost(){
       depart_time:pubType==='carpool'?departTime:null,
       seats_left:document.getElementById('pubSeats')?.value||'',
       cost_share:pubType==='carpool'?costShare:null
-    })
+    }).select('id').single()
     if(error)throw error
 
-    showToast('发布成功！')
+    await loadMe()
+    showToast('发布成功，雪票 +2')
     selImgs=[];renderImgGrid()
     document.getElementById('pubTitle').value=''
     document.getElementById('pubContent').value=''
@@ -1409,7 +1454,7 @@ async function submitPost(){
     const roomResortInput=document.getElementById('pubRoomResort');if(roomResortInput)roomResortInput.value=''
     const roomLocationInput=document.getElementById('pubRoomLocation');if(roomLocationInput)roomLocationInput.value=''
     ;['pubDepartTime','pubCostShare','pubCheckin','pubCheckout','pubRoomPeople','pubRoomBudget','pubGenderPref','pubMixedOk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
-    listContext=null;showPg('home');loadPosts()
+    listContext=null;loadPosts();if(newPost?.id){openPost(newPost.id)}else showPg('home')
   }catch(err){
     console.error(err)
     showToast('发布失败，请重试')
@@ -1474,7 +1519,8 @@ async function doAuth(){
     authMode='login';toggleAuth();btn.textContent='登录';btn.disabled=false;return
   }
   btn.textContent=authMode==='login'?'登录':'注册';btn.disabled=false
-  showToast('登录成功！');showPg('home')
+  showToast('登录成功！')
+  if(pendingAuthAction){const fn=pendingAuthAction;pendingAuthAction=null;setTimeout(()=>fn(),80)}else showPg('home')
 }
 
 // NOTIFICATIONS
@@ -1632,7 +1678,7 @@ function compressAvatarImage(file){
 }
 
 async function uploadAvatar(e){
-  if(!me){showPg('auth','login');return}
+  if(!me)return requireAuth(()=>showPg('mine'))
   const input=e.target
   const file=input.files&&input.files[0]
   if(!file)return
@@ -1645,14 +1691,18 @@ async function uploadAvatar(e){
     showToast('头像处理中...')
     const avatarBlob=await compressAvatarImage(file)
     if(editLabel)editLabel.textContent='头像上传中...'
-    const path=`avatars/${me.id}/avatar.jpg`
-    const{error:uploadError}=await db.storage.from('images').upload(path,avatarBlob,{contentType:'image/jpeg',upsert:true,cacheControl:'60'})
+    // 使用新文件名，避免 Supabase/CDN 或浏览器继续显示旧头像缓存
+    const stamp=Date.now()
+    const path=`avatars/${me.id}/avatar-${stamp}.jpg`
+    const{error:uploadError}=await db.storage.from('images').upload(path,avatarBlob,{contentType:'image/jpeg',cacheControl:'0'})
     if(uploadError){console.error(uploadError);showToast('头像上传失败：请检查 Storage 权限');return}
     const{data:u}=db.storage.from('images').getPublicUrl(path)
-    const avatarUrl=`${u.publicUrl}?v=${Date.now()}`
+    const avatarUrl=`${u.publicUrl}?v=${stamp}`
     const{error:profileError}=await db.from('profiles').update({avatar:avatarUrl}).eq('id',me.id)
     if(profileError){console.error(profileError);showToast('头像保存失败：请检查 profiles 权限');return}
+    me.prof={...(me.prof||{}),avatar:avatarUrl}
     await loadMe()
+    me.prof={...(me.prof||{}),avatar:avatarUrl}
     await syncMyPublicSnapshot()
     showToast('头像已更新')
     renderMine()
@@ -1744,7 +1794,7 @@ function goBack(){
   listContext=null
   showPg(prevPg||'home')
 }
-function requireAuth(fn){if(!me){showPg('auth','login');return}fn()}
+function requireAuth(fn){if(!me){pendingAuthAction=typeof fn==='function'?fn:null;showPg('auth','login');return}return fn&&fn()}
 
 // UTILS
 function fmtTime(ts){if(!ts)return'';const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()}`}
