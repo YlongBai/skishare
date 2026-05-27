@@ -1321,6 +1321,23 @@ function renderMine(){
     </div>`
 }
 
+
+async function syncMyPublicSnapshot(){
+  if(!me)return
+  const name=me.prof?.name||me.email.split('@')[0]
+  const avatar=me.prof?.avatar||null
+  // 首选数据库函数：可以一次性同步旧帖子、评论、通知里的昵称/头像
+  try{
+    const {error}=await db.rpc('sync_my_public_snapshot',{new_name:name,new_avatar:avatar})
+    if(!error)return
+    console.warn('sync_my_public_snapshot RPC failed, using fallback:',error)
+  }catch(e){console.warn('sync_my_public_snapshot RPC unavailable, using fallback:',e)}
+  // 兜底：如果你还没执行 SQL 函数，尽量用当前 RLS 权限同步自己能更新的数据
+  try{await db.from('posts').update({user_name:name,user_avatar:avatar}).eq('user_id',me.id)}catch(e){}
+  try{await db.from('comments').update({user_name:name,user_avatar:avatar}).eq('user_id',me.id)}catch(e){}
+  try{await db.from('notifications').update({sender_name:name,sender_avatar:avatar}).eq('sender_id',me.id)}catch(e){}
+}
+
 async function uploadAvatar(e){
   if(!me)return
   const file=e.target.files[0];if(!file)return
@@ -1330,14 +1347,20 @@ async function uploadAvatar(e){
   if(error){showToast('上传失败');return}
   const{data:u}=db.storage.from('images').getPublicUrl(path)
   await db.from('profiles').update({avatar:u.publicUrl}).eq('id',me.id)
-  await loadMe();showToast('头像已更新');renderMine()
+  await loadMe();await syncMyPublicSnapshot();showToast('头像已更新');renderMine()
 }
 
 async function editName(){
   const name=prompt('输入新昵称：',me.prof?.name||'')
   if(!name||!name.trim())return
-  await db.from('profiles').update({name:name.trim()}).eq('id',me.id)
-  await loadMe();showToast('昵称已更新');renderMine()
+  const clean=name.trim().slice(0,24)
+  const {error}=await db.from('profiles').update({name:clean}).eq('id',me.id)
+  if(error){showToast('昵称更新失败');return}
+  await loadMe()
+  await syncMyPublicSnapshot()
+  showToast('昵称已更新，旧帖子也已同步')
+  renderMine()
+  loadPosts()
 }
 
 async function myPosts(){
