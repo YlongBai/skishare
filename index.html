@@ -262,6 +262,15 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .back-top{position:fixed;bottom:80px;right:16px;width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;border:none;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(30,58,95,.3);cursor:pointer;z-index:99;opacity:0;transition:opacity .3s;pointer-events:none}
 .back-top.show{opacity:1;pointer-events:auto}
 
+
+/* LIKES + POINTS */
+.card-foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.card-social{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:12px;color:var(--muted);flex-shrink:0}
+.like-mini{display:inline-flex;align-items:center;gap:3px;padding:5px 8px;border-radius:999px;background:var(--snow);line-height:1;font-weight:700}
+.level-badge{display:inline-flex;align-items:center;gap:4px;background:var(--ice);color:var(--navy);border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700}
+.points-badge{display:inline-flex;align-items:center;gap:4px;background:#fff7df;color:#8a5a00;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700}
+.act-btn.like-on{background:rgba(232,74,74,.08);border-color:rgba(232,74,74,.25);color:var(--red)}
+
 /* SEARCH HISTORY */
 .search-wrap-rel{position:relative}
 .search-history{position:absolute;top:100%;left:0;right:0;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(30,58,95,.12);z-index:200;overflow:hidden;margin-top:4px}
@@ -679,9 +688,12 @@ function mkCard(p){
       ${p.type==='secondhand'?`<div class="card-price">${fmtPrice(p.price)}</div><div class="card-subline">${safe(p.title||'')}</div><div class="card-chiprow">${[SECONDHAND_CATS[p.subcategory],SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
       ${!['carpool','room','secondhand'].includes(p.type)?`<div class="card-title">${safe(p.title||'')}</div>`:''}
       <div class="card-desc">${safe(p.content||'')}</div>
-      <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
-        <div class="av-xs">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
-        <span class="uname">${safe(p.user_name||'雪友')}</span>
+      <div class="card-foot-row">
+        <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
+          <div class="av-xs">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
+          <span class="uname">${safe(p.user_name||'雪友')}</span>
+        </div>
+        <div class="card-social"><span class="like-mini">❤️ ${Number(p.like_count||0)}</span></div>
       </div>
     </div>
   </div>`
@@ -697,8 +709,14 @@ async function openPost(id){
     db.from('comments').select('*').eq('post_id',id).order('created_at',{ascending:true})
   ])
   if(!p){el.innerHTML='<div class="empty">帖子不存在</div>';return}
-  let isFav=false
-  if(me){const{data:f}=await db.from('favorites').select('id').eq('user_id',me.id).eq('post_id',id).maybeSingle();isFav=!!f}
+  let isFav=false, isLiked=false
+  if(me){
+    const[{data:f},{data:l}]=await Promise.all([
+      db.from('favorites').select('id').eq('user_id',me.id).eq('post_id',id).maybeSingle(),
+      db.from('likes').select('id').eq('user_id',me.id).eq('post_id',id).maybeSingle()
+    ])
+    isFav=!!f;isLiked=!!l
+  }
   const isOwner=me&&me.id===p.user_id
   const isAdmin=me&&me.prof?.is_admin
   const canDelete=isOwner||isAdmin
@@ -760,6 +778,7 @@ async function openPost(id){
         <div class="contact-hint">点击查看</div>
       </div>`:''}
       <div class="action-row">
+        <button class="act-btn ${isLiked?'like-on':''}" id="likeBtn" onclick="toggleLike('${p.id}',${isLiked})">${isLiked?'❤️ 已赞':'♡ 点赞'} ${Number(p.like_count||0)}</button>
         <button class="act-btn ${isFav?'on':''}" id="favBtn" onclick="toggleFav('${p.id}',${isFav})">${isFav?'⭐ 已收藏':'☆ 收藏'}</button>
         <button class="act-btn" onclick="sharePost('${p.id}','${jsStr(p.title||'')}')">↗ 分享</button>
         ${isOwner?`<button class="act-btn" onclick="editPost('${p.id}')">✏️ 编辑</button>`:''}
@@ -855,7 +874,7 @@ async function sendComment(){
     const{data:p}=await db.from('posts').select('user_id').eq('id',curPostId).single()
     if(p&&p.user_id!==me.id)sendNotif(p.user_id,'comment',txt)
   }
-  document.getElementById('cmtInput').value='';cancelReply();showToast('评论成功');openPost(curPostId)
+  await loadMe();document.getElementById('cmtInput').value='';cancelReply();showToast('评论成功，雪票 +1');openPost(curPostId)
 }
 
 async function sendNotif(uid,type,content){
@@ -870,6 +889,21 @@ async function toggleFav(postId,isFav){
   if(isFav)await db.from('favorites').delete().eq('user_id',me.id).eq('post_id',postId)
   else await db.from('favorites').insert({user_id:me.id,post_id:postId})
   openPost(postId)
+}
+
+async function toggleLike(postId,isLiked){
+  if(!me){showPg('auth','login');return}
+  const btn=document.getElementById('likeBtn')
+  if(btn)btn.disabled=true
+  let error=null
+  if(isLiked){
+    const res=await db.from('likes').delete().eq('user_id',me.id).eq('post_id',postId);error=res.error
+  }else{
+    const res=await db.from('likes').insert({user_id:me.id,post_id:postId});error=res.error
+  }
+  if(error){showToast('操作失败，请确认 likes 表和 RLS 已配置');if(btn)btn.disabled=false;return}
+  await loadMe()
+  openPost(postId);loadPosts()
 }
 
 async function toggleSold(postId,sold){
@@ -1261,12 +1295,13 @@ function renderMine(){
     el.innerHTML=`<div style="padding:100px 20px;text-align:center"><div style="font-size:48px;margin-bottom:16px">🎿</div><div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">登录后查看个人信息</div><div style="color:var(--muted);margin-bottom:24px;font-size:14px">加入澳洲华人滑雪社区</div><button class="btn btn-p" onclick="showPg('auth','login')">去登录</button></div>`;return
   }
   const p=me.prof,name=p?.name||me.email.split('@')[0]
+  const lv=levelInfo(p?.points||0)
   el.innerHTML=`
     <div class="mine-hero">
       <div class="av-lg" style="cursor:pointer" onclick="document.getElementById('avInput').click()">${urlOk(p?.avatar)?`<img src="${urlOk(p.avatar)}" alt="头像">`:name[0]}</div>
       <div class="mine-info">
         <div class="mine-name">${safe(name)}</div>
-        <div class="mine-email">${safe(maskEmail(me.email))}</div><div class="credit-row"><span class="credit-pill">${me.email_confirmed_at?'邮箱已验证':'邮箱未验证'}</span></div>
+        <div class="mine-email">${safe(maskEmail(me.email))}</div><div class="credit-row"><span class="level-badge">${lv.label} ${lv.title}</span><span class="points-badge">🎫 雪票 ${p?.points||0}</span><span class="credit-pill">${me.email_confirmed_at?'邮箱已验证':'邮箱未验证'}</span></div>
         <div class="mine-edit-av" onclick="document.getElementById('avInput').click()">点击更换头像</div>
       </div>
     </div>
@@ -1401,7 +1436,11 @@ function ownerStatusActions(p){
   return''
 }
 async function loadUserStats(uid){
-  const stats={posts:0,firstPost:'',verified:null,reports:null}
+  const stats={posts:0,firstPost:'',verified:null,reports:null,points:0}
+  try{
+    const{data:prof}=await db.from('profiles').select('points').eq('id',uid).maybeSingle()
+    stats.points=prof?.points||0
+  }catch(e){}
   try{
     const{count}=await db.from('posts').select('*',{count:'exact',head:true}).eq('user_id',uid)
     stats.posts=count||0
@@ -1418,8 +1457,19 @@ async function loadUserStats(uid){
   }
   return stats
 }
+function levelInfo(points){
+  const p=Number(points||0)
+  if(p>=500)return {level:5,label:'Lv5',title:'雪国传说'}
+  if(p>=200)return {level:4,label:'Lv4',title:'雪场常驻'}
+  if(p>=80)return {level:3,label:'Lv3',title:'Powder Hunter'}
+  if(p>=25)return {level:2,label:'Lv2',title:'周末滑手'}
+  return {level:1,label:'Lv1',title:'新手雪友'}
+}
 function renderCreditPills(stats,uid){
   const arr=[]
+  const lv=levelInfo(stats?.points||0)
+  arr.push(`${lv.label} · ${lv.title}`)
+  arr.push(`雪票 ${stats?.points||0}`)
   if(stats?.posts!==undefined)arr.push(`发帖 ${stats.posts}`)
   if(stats?.firstPost)arr.push(`首帖 ${fmtTime(stats.firstPost)}`)
   if(stats?.verified!==null)arr.push(stats.verified?'邮箱已验证':'邮箱未验证')
