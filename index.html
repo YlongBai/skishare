@@ -547,6 +547,30 @@ input[type="date"].filter-i{-webkit-appearance:none;appearance:none;font-size:11
 .img-viewer-arrow{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.18)!important}
 .img-viewer-count{bottom:22px!important;background:rgba(15,25,35,.56)!important;backdrop-filter:blur(6px)}
 
+
+
+/* V15.1 FILTER PANEL LAYOUT FIX */
+.filter-panel{padding:14px!important;margin-top:12px!important;border-radius:22px!important}
+.filter-title{margin-bottom:12px!important}
+.filter-form{display:flex!important;flex-direction:column!important;gap:10px!important}
+.filter-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important}
+.filter-field{min-width:0!important}
+.filter-label{display:block!important;font-size:11px!important;font-weight:800!important;color:var(--muted)!important;margin:0 0 5px 4px!important;line-height:1!important}
+.filter-field .filter-i{height:42px!important;width:100%!important;font-size:13px!important;padding:0 13px!important;border-radius:999px!important;background:#fff!important;line-height:42px!important}
+.filter-field input[type="date"].filter-i{font-size:13px!important;padding:0 10px!important;min-height:42px!important;color:var(--text)!important}
+.filter-field input[type="date"].filter-i:invalid{color:var(--muted)!important}
+.filter-actions{margin-top:12px!important;display:grid!important;grid-template-columns:1.1fr .8fr .9fr!important;gap:8px!important}
+.filter-btn{min-height:42px!important;padding:0 10px!important;white-space:nowrap!important}
+.subcat-bar{margin-top:12px!important;padding:6px 2px 12px!important}
+#roomCats.subcat-bar{margin-top:10px!important}
+@media (max-width:380px){
+  .filter-row{gap:8px!important}
+  .filter-field .filter-i{font-size:12px!important;padding:0 10px!important}
+  .filter-label{font-size:10px!important}
+  .filter-actions{grid-template-columns:1fr 1fr 1fr!important;gap:7px!important}
+  .filter-btn{font-size:11px!important;padding:0 6px!important}
+}
+
 </style>
 </head>
 <body>
@@ -849,20 +873,28 @@ function renderFilters(){
   const rf=document.getElementById('roomFilters')
   if(cf){
     cf.classList.toggle('hidden',curTab!=='carpool')
-    cf.innerHTML=curTab==='carpool'?`<div class="filter-title">拼车筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-grid">
-      <input class="filter-i" id="fltCarpoolFrom" placeholder="出发地，如 Sydney">
-      <select class="filter-i" id="fltCarpoolResort"><option value="">全部雪场</option><option>Perisher</option><option>Thredbo</option><option>Mt Buller</option><option>Falls Creek</option><option>Hotham</option><option>Ben Lomond</option><option>Other</option></select>
-      <input class="filter-i" type="date" id="fltCarpoolFromDate">
-      <input class="filter-i" type="date" id="fltCarpoolToDate">
+    cf.innerHTML=curTab==='carpool'?`<div class="filter-title">拼车筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-form">
+      <div class="filter-row">
+        <label class="filter-field"><span class="filter-label">出发地</span><input class="filter-i" id="fltCarpoolFrom" placeholder="Sydney / Chatswood"></label>
+        <label class="filter-field"><span class="filter-label">目的雪场</span><select class="filter-i" id="fltCarpoolResort"><option value="">全部雪场</option><option>Perisher</option><option>Thredbo</option><option>Mt Buller</option><option>Falls Creek</option><option>Hotham</option><option>Ben Lomond</option><option>Other</option></select></label>
+      </div>
+      <div class="filter-row">
+        <label class="filter-field"><span class="filter-label">开始日期</span><input class="filter-i" type="date" id="fltCarpoolFromDate"></label>
+        <label class="filter-field"><span class="filter-label">结束日期</span><input class="filter-i" type="date" id="fltCarpoolToDate"></label>
+      </div>
     </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">应用筛选</button><button class="filter-btn" onclick="clearFilters('carpool')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
   }
   if(rf){
     rf.classList.toggle('hidden',curTab!=='room')
-    rf.innerHTML=curTab==='room'?`<div class="filter-title">拼房筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-grid">
-      <select class="filter-i" id="fltRoomResort"><option value="">全部雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select>
-      <input class="filter-i" id="fltRoomLocation" placeholder="住宿地，如 Jindabyne">
-      <input class="filter-i" type="date" id="fltRoomFromDate">
-      <input class="filter-i" type="number" min="0" id="fltRoomMaxBudget" placeholder="最高预算/晚">
+    rf.innerHTML=curTab==='room'?`<div class="filter-title">拼房筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-form">
+      <div class="filter-row">
+        <label class="filter-field"><span class="filter-label">目标雪场</span><select class="filter-i" id="fltRoomResort"><option value="">全部雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select></label>
+        <label class="filter-field"><span class="filter-label">住宿地点</span><input class="filter-i" id="fltRoomLocation" placeholder="Jindabyne / Cooma"></label>
+      </div>
+      <div class="filter-row">
+        <label class="filter-field"><span class="filter-label">入住日期</span><input class="filter-i" type="date" id="fltRoomFromDate"></label>
+        <label class="filter-field"><span class="filter-label">最高预算/晚</span><input class="filter-i" type="number" min="0" id="fltRoomMaxBudget" placeholder="例如 120"></label>
+      </div>
     </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">应用筛选</button><button class="filter-btn" onclick="clearFilters('room')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
   }
 }
