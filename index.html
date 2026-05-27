@@ -453,6 +453,27 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .type-card > div:first-child{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:22px;padding:0 8px;border-radius:999px;background:rgba(30,58,95,.08);color:var(--navy);font-family:'Syne','Noto Sans SC',sans-serif;font-size:10px!important;font-weight:800;letter-spacing:.04em;margin-bottom:6px}
 .empty-icon{font-size:14px!important;font-weight:800;letter-spacing:.03em;color:var(--navy)}
 .install-banner-icon{font-size:12px!important;font-weight:900;letter-spacing:.08em}
+
+
+/* V14.2 restore friendly emoji outside homepage cards */
+.type-card > div:first-child{
+  display:block!important;
+  min-width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  font-family:'Noto Sans SC',sans-serif!important;
+  font-size:24px!important;
+  line-height:1.1!important;
+  font-weight:400!important;
+  letter-spacing:0!important;
+  margin-bottom:6px!important;
+}
+.publish-section-title{font-size:16px!important}
+.publish-section-title .publish-section-sub{font-size:11px!important}
+
 </style>
 </head>
 <body>
@@ -546,7 +567,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">标题</label><input class="form-i" id="pubTitle" placeholder="输入标题"></div>
       <div class="form-g"><label class="form-l">详细内容</label><textarea class="form-t" id="pubContent" placeholder="分享更多详情..."></textarea></div>
     </div>
-    <div id="carpoolF" class="publish-section hidden"><div class="publish-section-title">拼车信息 <span class="publish-section-sub">路线 / 时间 / 空位</span></div>
+    <div id="carpoolF" class="publish-section hidden"><div class="publish-section-title">🚗 拼车信息 <span class="publish-section-sub">路线 / 时间 / 空位</span></div>
       <div class="form-g"><label class="form-l">出发日期</label><input class="form-i" type="date" id="pubDate"></div>
       <div class="form-g"><label class="form-l">出发时间</label><input class="form-i" type="time" id="pubDepartTime"></div>
       <div class="form-g"><label class="form-l">出发地</label><input class="form-i" id="pubDep" placeholder="例如 Sydney / Chatswood"></div>
@@ -554,13 +575,13 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">空位人数</label><input class="form-i" type="number" min="1" id="pubSeats" placeholder="例如 2"></div>
       <div class="form-g"><label class="form-l">费用分摊</label><input class="form-i" id="pubCostShare" placeholder="例如 AA油费 / $80 每人 / 免费"></div>
     </div>
-    <div id="secondhandF" class="publish-section hidden"><div class="publish-section-title">二手信息 <span class="publish-section-sub">价格 / 成色 / 城市</span></div>
+    <div id="secondhandF" class="publish-section hidden"><div class="publish-section-title">🎿 二手信息 <span class="publish-section-sub">价格 / 成色 / 城市</span></div>
       <div class="form-g"><label class="form-l">二手分类</label><select class="form-s" id="pubSubcategory"><option value="">选择分类</option><option value="snowboard">单板</option><option value="ski">双板</option><option value="clothing">雪服</option><option value="helmet">头盔</option><option value="goggles">雪镜</option><option value="boots">雪鞋</option><option value="bindings">固定器</option><option value="other">其他</option></select></div>
       <div class="form-g"><label class="form-l">价格（AUD）</label><input class="form-i" type="number" min="0" step="1" id="pubPrice" placeholder="例如 350"></div>
       <div class="form-g"><label class="form-l">新旧程度</label><select class="form-s" id="pubCondition"><option value="">选择新旧程度</option><option value="new">全新</option><option value="like_new">95新</option><option value="excellent">9新</option><option value="good">8新</option><option value="used">有使用痕迹</option><option value="other">其他</option></select></div>
       <div class="form-g"><label class="form-l">所在城市</label><select class="form-s" id="pubCity"><option value="">选择城市</option><option value="Sydney">Sydney</option><option value="Melbourne">Melbourne</option><option value="Canberra">Canberra</option><option value="Jindabyne">Jindabyne</option><option value="Brisbane">Brisbane</option><option value="Adelaide">Adelaide</option><option value="Perth">Perth</option><option value="Hobart">Hobart</option><option value="Other">其他</option></select></div>
     </div>
-    <div id="roomF" class="publish-section hidden"><div class="publish-section-title">拼房信息 <span class="publish-section-sub">雪场 / 日期 / 预算</span></div>
+    <div id="roomF" class="publish-section hidden"><div class="publish-section-title">🏠 拼房信息 <span class="publish-section-sub">雪场 / 日期 / 预算</span></div>
       <div class="form-g"><label class="form-l">目标雪场</label><select class="form-s" id="pubRoomResort"><option value="">选择雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select></div>
       <div class="form-g"><label class="form-l">住宿地点</label><input class="form-i" id="pubRoomLocation" placeholder="例如 Jindabyne / Cooma / Mansfield"></div>
       <div class="form-g"><label class="form-l">入住日期</label><input class="form-i" type="date" id="pubCheckin"></div>
@@ -570,7 +591,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">性别偏好</label><select class="form-s" id="pubGenderPref"><option value="">无特殊偏好</option><option value="female">女生优先</option><option value="male">男生优先</option><option value="couple">情侣/两人优先</option><option value="any">不限</option></select></div>
       <div class="form-g"><label class="form-l">是否接受混住</label><select class="form-s" id="pubMixedOk"><option value="">请选择</option><option value="yes">接受混住</option><option value="no">不接受混住</option><option value="depends">看情况</option></select></div>
     </div>
-    <div id="locationF" class="publish-section hidden"><div class="publish-section-title">地点：地点信息</div><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
+    <div id="locationF" class="publish-section hidden"><div class="publish-section-title">📍 地点信息</div><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
     <div id="contactF" class="publish-section"><div class="publish-section-title">📮 联系方式</div><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
     <div class="publish-section">
       <div class="publish-section-title">🖼 图片 <span class="publish-section-sub">最多 3 张</span></div>
