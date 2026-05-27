@@ -91,6 +91,18 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .card-meta{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:8px}
 .card-route{font-size:13px;font-weight:800;color:var(--navy);line-height:1.35;margin-bottom:5px}
 .card-info{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}
+.card-primary{font-size:14px;font-weight:900;color:var(--navy);line-height:1.3;margin-bottom:5px}
+.card-subline{font-size:12px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:4px}
+.card-chiprow{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.mini-chip{font-size:10px;font-weight:700;color:var(--navy);background:var(--ice);border-radius:999px;padding:2px 6px}
+.status-badge{position:absolute;left:8px;bottom:8px;background:rgba(15,25,35,.72);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;backdrop-filter:blur(4px)}
+.credit-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;font-size:11px;color:var(--muted)}
+.credit-pill{background:var(--snow);border-radius:999px;padding:3px 7px;color:var(--navy);font-weight:700}
+.risk-box{background:#fff7e6;border:1.5px solid rgba(244,180,0,.22);border-radius:12px;padding:12px 14px;margin-bottom:16px;color:#7a5200;font-size:13px;line-height:1.65}
+.risk-title{font-weight:800;color:#6b4700;margin-bottom:4px}
+.status-actions{display:flex;gap:8px;margin:-8px 0 16px;flex-wrap:wrap}
+.status-actions .act-btn{flex:1;min-width:90px}
+
 .card-foot{display:flex;align-items:center;gap:6px}
 .av-xs{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
 .av-xs img,.av-sm img,.av-md img,.av-lg img{width:100%;height:100%;object-fit:cover}
@@ -656,15 +668,16 @@ function mkCard(p){
       ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
       ${expired?'<div class="expired-badge">已过期</div>':''}
+      ${postStatusLabel(p)?`<div class="status-badge">${postStatusLabel(p)}</div>`:''}
       ${p.type==='secondhand'&&p.subcategory?`<div class="card-tag">${SECONDHAND_CATS[p.subcategory]||'二手'}</div>`:''}
       ${p.type==='room'&&p.room_resort?`<div class="card-tag">${ROOM_RESORTS[p.room_resort]||p.room_resort}</div>`:''}
       ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
     </div>
     <div class="card-body">
-      <div class="card-title">${safe(p.title||'')}</div>
-      ${p.type==='carpool'?`<div class="card-route">${safe(p.departure||'出发地')} → ${safe(p.resort||'雪场')}</div><div class="card-info">${[p.trip_date,formatTimeShort(p.depart_time),p.seats_left?`缺${p.seats_left}人`:'',p.cost_share].filter(Boolean).map(safe).join(' · ')}</div>`:''}
-      ${p.type==='room'?`<div class="card-route">${safe(p.room_resort||'雪场')} · ${safe(p.room_location||'住宿地点')}</div><div class="card-info">${[dateRange(p.checkin_date,p.checkout_date),p.room_budget?fmtPrice(p.room_budget)+'/晚':'',p.room_people?`缺${p.room_people}人`:'',GENDER_PREFS[p.gender_pref],MIXED_OK[p.mixed_ok]].filter(Boolean).map(safe).join(' · ')}</div>`:''}
-      ${p.type==='secondhand'?`<div class="card-price">${fmtPrice(p.price)}</div><div class="card-meta">${[SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(safe).join(' · ')}</div>`:''}
+      ${p.type==='carpool'?`<div class="card-primary">${safe(p.departure||'出发地')} → ${safe(p.resort||'雪场')}</div><div class="card-subline">${[p.trip_date,formatTimeShort(p.depart_time)].filter(Boolean).map(safe).join(' · ')}</div><div class="card-chiprow">${[p.seats_left?`缺${p.seats_left}人`:'',p.cost_share].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
+      ${p.type==='room'?`<div class="card-primary">${safe(ROOM_RESORTS[p.room_resort]||p.room_resort||'雪场')}</div><div class="card-subline">${safe(dateRange(p.checkin_date,p.checkout_date)||p.room_location||'住宿信息')}</div><div class="card-chiprow">${[p.room_location,p.room_budget?fmtPrice(p.room_budget)+'/晚':'',p.room_people?`缺${p.room_people}人`:'' ].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
+      ${p.type==='secondhand'?`<div class="card-price">${fmtPrice(p.price)}</div><div class="card-subline">${safe(p.title||'')}</div><div class="card-chiprow">${[SECONDHAND_CATS[p.subcategory],SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
+      ${!['carpool','room','secondhand'].includes(p.type)?`<div class="card-title">${safe(p.title||'')}</div>`:''}
       <div class="card-desc">${safe(p.content||'')}</div>
       <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
         <div class="av-xs">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
@@ -690,6 +703,7 @@ async function openPost(id){
   const isAdmin=me&&me.prof?.is_admin
   const canDelete=isOwner||isAdmin
   const imgs=p.images||[]
+  const stats=await loadUserStats(p.user_id)
 
   el.innerHTML=`
     ${imgs.length?`
@@ -706,7 +720,7 @@ async function openPost(id){
         <div class="av-md" style="cursor:pointer" onclick="openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')">${urlOk(p.user_avatar)?`<img src="${urlOk(p.user_avatar)}" alt="头像">`:(p.user_name||'雪')[0]}</div>
         <div style="flex:1;cursor:pointer" onclick="openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')">
           <div style="font-weight:700;font-size:14px">${safe(p.user_name||'雪友')}</div>
-          <div style="font-size:12px;color:var(--muted)">${fmtTime(p.created_at)}</div>
+          <div style="font-size:12px;color:var(--muted)">${fmtTime(p.created_at)}</div><div class="credit-row">${renderCreditPills(stats,p.user_id)}</div>
         </div>
         <div style="display:flex;gap:6px">
           ${isAdmin?`<button class="btn btn-sm" style="background:${p.pinned?'var(--navy)':'rgba(30,58,95,.1)'};color:${p.pinned?'#fff':'var(--navy)'};border:none" onclick="togglePin('${p.id}',${p.pinned})">${p.pinned?'📌 已置顶':'置顶'}</button>`:''}
@@ -737,6 +751,8 @@ async function openPost(id){
         ${p.item_condition?`<div class="trip-row">✨ ${safe(SECONDHAND_CONDITIONS[p.item_condition]||p.item_condition)}</div>`:''}
         ${p.city?`<div class="trip-row">📍 ${safe(p.city)}</div>`:''}
       </div>`:''}
+      ${riskBox(p)}
+      ${isOwner?ownerStatusActions(p):''}
       <div class="detail-content">${safe(p.content||'暂无内容')}</div>
       ${p.contact?`<div class="contact-box" onclick="revealContact(this,'${jsStr(p.contact)}')">
         <div class="contact-label">联系方式</div>
@@ -747,7 +763,6 @@ async function openPost(id){
         <button class="act-btn ${isFav?'on':''}" id="favBtn" onclick="toggleFav('${p.id}',${isFav})">${isFav?'⭐ 已收藏':'☆ 收藏'}</button>
         <button class="act-btn" onclick="sharePost('${p.id}','${jsStr(p.title||'')}')">↗ 分享</button>
         ${isOwner?`<button class="act-btn" onclick="editPost('${p.id}')">✏️ 编辑</button>`:''}
-        ${isOwner&&p.type==='secondhand'?`<button class="act-btn ${p.sold?'on':''}" onclick="toggleSold('${p.id}',${p.sold})">${p.sold?'✅ 已售出':'标记售出'}</button>`:''}
         ${!isOwner?`<button class="act-btn red" onclick="reportPost('${p.id}')">⚑ 举报</button>`:''}
       </div>
     </div>
@@ -858,7 +873,19 @@ async function toggleFav(postId,isFav){
 }
 
 async function toggleSold(postId,sold){
-  await db.from('posts').update({sold:!sold}).eq('id',postId);openPost(postId)
+  const next=!sold
+  await db.from('posts').update({sold:next,post_status:next?'sold':'active'}).eq('id',postId)
+  showToast(next?'已标记售出':'已恢复出售')
+  openPost(postId);loadPosts()
+}
+async function setPostStatus(postId,status){
+  const update={post_status:status}
+  if(status==='sold')update.sold=true
+  if(status==='active')update.sold=false
+  const{error}=await db.from('posts').update(update).eq('id',postId)
+  if(error){showToast('状态更新失败，请确认 post_status 字段已添加');return}
+  showToast('状态已更新')
+  openPost(postId);loadPosts()
 }
 
 async function togglePin(postId,pinned){
@@ -1239,7 +1266,7 @@ function renderMine(){
       <div class="av-lg" style="cursor:pointer" onclick="document.getElementById('avInput').click()">${urlOk(p?.avatar)?`<img src="${urlOk(p.avatar)}" alt="头像">`:name[0]}</div>
       <div class="mine-info">
         <div class="mine-name">${safe(name)}</div>
-        <div class="mine-email">${safe(maskEmail(me.email))}</div>
+        <div class="mine-email">${safe(maskEmail(me.email))}</div><div class="credit-row"><span class="credit-pill">${me.email_confirmed_at?'邮箱已验证':'邮箱未验证'}</span></div>
         <div class="mine-edit-av" onclick="document.getElementById('avInput').click()">点击更换头像</div>
       </div>
     </div>
@@ -1297,7 +1324,9 @@ async function signOut(){await db.auth.signOut();me=null;updateNav();showPg('hom
 async function openProfile(uid,name,avatar){
   prevPg=curPg;showPg('profile')
   const el=document.getElementById('profileWrap')
-  el.innerHTML=`<div class="profile-hero"><div class="av-lg">${urlOk(avatar)?`<img src="${urlOk(avatar)}" alt="头像">`:name[0]}</div><div class="profile-name">${safe(name)}</div></div><div id="profPosts" style="padding:10px"><div class="empty">加载中...</div></div>`
+  el.innerHTML=`<div class="profile-hero"><div class="av-lg">${urlOk(avatar)?`<img src="${urlOk(avatar)}" alt="头像">`:name[0]}</div><div class="profile-name">${safe(name)}</div><div id="profileStats" class="credit-row" style="justify-content:center;margin-top:8px"></div></div><div id="profPosts" style="padding:10px"><div class="empty">加载中...</div></div>`
+  const stats=await loadUserStats(uid)
+  const psEl=document.getElementById('profileStats');if(psEl)psEl.innerHTML=renderCreditPills(stats,uid)
   const{data}=await db.from('posts').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(50)
   const ps=data||[]
   const el2=document.getElementById('profPosts')
@@ -1347,6 +1376,55 @@ function canDoAction(key,ms){
   const now=Date.now(),k='rate_'+key,last=Number(localStorage.getItem(k)||0)
   if(now-last<ms)return false
   localStorage.setItem(k,String(now));return true
+}
+
+
+function postStatusLabel(p){
+  if(!p)return''
+  if(p.sold||p.post_status==='sold')return'已售出'
+  if(p.post_status==='full')return p.type==='carpool'?'已满员':'已满房'
+  if(p.post_status==='ended')return'已结束'
+  return''
+}
+function riskBox(p){
+  if(!p||!['secondhand','room'].includes(p.type))return''
+  const txt=p.type==='secondhand'
+    ?'二手交易建议当面验货，确认型号、尺码和成色后再付款；不要提前大额转账，警惕低价诱导和假物流。'
+    :'拼房前请核实住宿地址、入住日期、付款方式和预订证明；不要提前大额转账，尽量使用可追踪付款方式。'
+  return `<div class="risk-box"><div class="risk-title">交易安全提醒</div>${safe(txt)}</div>`
+}
+function ownerStatusActions(p){
+  if(!p)return''
+  if(p.type==='secondhand')return `<div class="status-actions"><button class="act-btn" onclick="setPostStatus('${p.id}','active')">继续出售</button><button class="act-btn" onclick="setPostStatus('${p.id}','sold')">标记售出</button></div>`
+  if(p.type==='carpool')return `<div class="status-actions"><button class="act-btn" onclick="setPostStatus('${p.id}','active')">继续招人</button><button class="act-btn" onclick="setPostStatus('${p.id}','full')">已满员</button><button class="act-btn" onclick="setPostStatus('${p.id}','ended')">已结束</button></div>`
+  if(p.type==='room')return `<div class="status-actions"><button class="act-btn" onclick="setPostStatus('${p.id}','active')">继续拼房</button><button class="act-btn" onclick="setPostStatus('${p.id}','full')">已满房</button><button class="act-btn" onclick="setPostStatus('${p.id}','ended')">已结束</button></div>`
+  return''
+}
+async function loadUserStats(uid){
+  const stats={posts:0,firstPost:'',verified:null,reports:null}
+  try{
+    const{count}=await db.from('posts').select('*',{count:'exact',head:true}).eq('user_id',uid)
+    stats.posts=count||0
+    const{data:first}=await db.from('posts').select('created_at').eq('user_id',uid).order('created_at',{ascending:true}).limit(1).maybeSingle()
+    stats.firstPost=first?.created_at||''
+  }catch(e){}
+  if(me&&me.id===uid)stats.verified=!!me.email_confirmed_at
+  if(me&&me.prof?.is_admin){
+    try{
+      const{data:userPosts}=await db.from('posts').select('id').eq('user_id',uid)
+      const ids=(userPosts||[]).map(x=>x.id)
+      if(ids.length){const{count}=await db.from('reports').select('*',{count:'exact',head:true}).in('post_id',ids);stats.reports=count||0}else stats.reports=0
+    }catch(e){}
+  }
+  return stats
+}
+function renderCreditPills(stats,uid){
+  const arr=[]
+  if(stats?.posts!==undefined)arr.push(`发帖 ${stats.posts}`)
+  if(stats?.firstPost)arr.push(`首帖 ${fmtTime(stats.firstPost)}`)
+  if(stats?.verified!==null)arr.push(stats.verified?'邮箱已验证':'邮箱未验证')
+  if(stats?.reports!==null&&stats?.reports!==undefined)arr.push(`被举报 ${stats.reports}`)
+  return arr.map(x=>`<span class="credit-pill">${safe(x)}</span>`).join('')
 }
 
 setInterval(()=>{if(me)checkUnread()},30000)
