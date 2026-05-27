@@ -784,7 +784,7 @@ const TYPES=[{l:'拼车',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v
 const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
 const EMOJI={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
 const TYPE_LABELS={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
-const OFFICIAL_NOTICE={label:'SKI SHARE',tag:'雪季提醒',title:'❄️ 澳洲雪季要回来啦！',points:['Perisher、Thredbo 已经开始热闹起来了~','找搭子、拼车、拼房、收雪具的朋友，都可以提前开始发帖~','希望大家今年都能多追几场 powder 🎿']}
+const OFFICIAL_NOTICE={label:'SKI SHARE',tag:'雪季提醒',title:'❄️ 澳洲雪季要回来啦！',points:['Perisher、Thredbo 已经开始热闹起来了','找搭子、拼车、拼房、收雪具的朋友，都可以提前开始发帖～','希望大家今年都能多追几场 powder 🎿']}
 
 ;(async()=>{
   const {data:{session}}=await db.auth.getSession()
@@ -1406,7 +1406,7 @@ function compressImage(file){
     const img=new Image()
     const url=URL.createObjectURL(file)
     img.onload=()=>{
-      const MAX=900
+      const MAX=720
       let w=img.width,h=img.height
       if(w>MAX||h>MAX){
         if(w>=h){h=Math.round(h*MAX/w);w=MAX}
@@ -1415,7 +1415,7 @@ function compressImage(file){
       const canvas=document.createElement('canvas')
       canvas.width=w;canvas.height=h
       canvas.getContext('2d').drawImage(img,0,0,w,h)
-      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.65)
+      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.58)
       URL.revokeObjectURL(url)
     }
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)}
@@ -1533,8 +1533,14 @@ async function submitPost(){
   btn.disabled=true
 
   try{
+    let finishedUploads=0
     const urls=selImgs.length
-      ? await Promise.all(selImgs.map((file,i)=>uploadOneImage(file,i,selImgs.length,msg=>{btn.textContent=msg})))
+      ? await Promise.all(selImgs.map(async(file,i)=>{
+          const url=await uploadOneImage(file,i,selImgs.length,msg=>{btn.textContent=msg})
+          finishedUploads++
+          btn.textContent=`图片上传完成 ${finishedUploads}/${selImgs.length}...`
+          return url
+        }))
       : []
 
     btn.textContent='保存帖子中...'
