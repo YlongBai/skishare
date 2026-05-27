@@ -278,6 +278,45 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .sh-item:last-child{border-bottom:none}
 .sh-item:active{background:var(--snow)}
 .sh-clear{padding:8px 14px;font-size:12px;color:var(--muted);text-align:center;cursor:pointer;border-top:1px solid var(--snow)}
+
+
+/* V12 VISUAL CARD REWORK */
+.card{border:1px solid rgba(30,58,95,.05)}
+.card-carpool .card-body{background:linear-gradient(180deg,#ffffff 0%,#f4fbff 100%)}
+.card-room .card-body{background:linear-gradient(180deg,#ffffff 0%,#fff9ef 100%)}
+.card-secondhand .card-body{background:linear-gradient(180deg,#ffffff 0%,#fbf7ff 100%)}
+.card-carpool .card-primary::before{content:'🚗 ';font-size:13px}
+.card-room .card-primary::before{content:'🏠 ';font-size:13px}
+.card-price::before{content:'💰 ';font-size:13px}
+.card-primary{font-size:15px!important;font-weight:900!important;color:var(--navy)!important;line-height:1.25!important;margin-bottom:6px!important;letter-spacing:-.2px}
+.card-price{font-size:20px!important;font-weight:900!important;color:#7c3aed!important;margin-bottom:4px!important;letter-spacing:-.3px}
+.card-subline{font-size:12px!important;color:var(--text)!important;font-weight:700!important;line-height:1.35!important;margin-bottom:7px!important}
+.card-chiprow{display:flex!important;flex-wrap:wrap!important;gap:4px!important;margin:5px 0 7px!important}
+.mini-chip{font-size:10px!important;font-weight:800!important;border-radius:999px!important;padding:3px 7px!important;background:#fff!important;border:1px solid rgba(30,58,95,.10)!important;color:var(--navy)!important;box-shadow:0 1px 4px rgba(30,58,95,.04)!important}
+.card-carpool .mini-chip{border-color:rgba(59,158,222,.22)!important;color:#176c9f!important;background:#eef8ff!important}
+.card-room .mini-chip{border-color:rgba(244,180,0,.25)!important;color:#8a6100!important;background:#fff7df!important}
+.card-secondhand .mini-chip{border-color:rgba(168,85,247,.22)!important;color:#6d28d9!important;background:#f5edff!important}
+.card-desc{font-size:11px!important;color:var(--muted)!important;line-height:1.45!important;margin-bottom:6px!important}
+.card-foot-row{border-top:1px solid rgba(30,58,95,.06);padding-top:8px;margin-top:8px!important}
+.card-social{font-size:11px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.like-mini{background:#fff;border:1px solid rgba(232,74,74,.12);border-radius:999px;padding:3px 7px;color:#d83a3a;box-shadow:0 1px 5px rgba(232,74,74,.06)}
+.card-tag{font-weight:800!important;background:rgba(15,25,35,.62)!important}
+.status-badge,.expired-badge{font-weight:900!important}
+
+/* V12.1 BALANCE POST + NEWS CARDS */
+.card-post .card-body{background:linear-gradient(180deg,#ffffff 0%,#f3fff7 100%)}
+.card-news .card-body{background:linear-gradient(180deg,#ffffff 0%,#f1fbfb 100%)}
+.card-post .card-primary::before{content:'❄️ ';font-size:13px}
+.card-news .card-primary::before{content:'🏔️ ';font-size:13px}
+.card-post .card-primary{color:#167a3f!important}
+.card-news .card-primary{color:#0d6f75!important}
+.card-post .mini-chip{border-color:rgba(34,197,94,.22)!important;color:#167a3f!important;background:#effaf3!important}
+.card-news .mini-chip{border-color:rgba(13,148,136,.22)!important;color:#0d6f75!important;background:#eefafa!important}
+.card-community-title{font-size:15px!important;font-weight:900!important;line-height:1.28!important;color:var(--text)!important;margin:4px 0 6px!important;letter-spacing:-.2px}
+.card-news-headline{font-size:15px!important;font-weight:900!important;line-height:1.28!important;color:var(--text)!important;margin:4px 0 6px!important;letter-spacing:-.2px}
+.card-post .card-desc,.card-news .card-desc{-webkit-line-clamp:3!important;font-size:12px!important;line-height:1.55!important;color:#425466!important}
+.card-post .card-placeholder,.card-news .card-placeholder{font-size:44px;background:linear-gradient(135deg,var(--ice),#fff)!important}
+
 </style>
 </head>
 <body>
@@ -672,7 +711,7 @@ function mkCard(p){
   const cover=p.images&&p.images[0]
   const init=(p.user_name||'雪')[0]
   const expired=isExpiredPost(p)
-  return`<div class="card ${expired?'expired-card':''}" onclick="openPost('${p.id}')">
+  return`<div class="card card-${p.type||'post'} ${expired?'expired-card':''}" onclick="openPost('${p.id}')">
     <div class="card-img-wrap">
       ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
@@ -686,7 +725,9 @@ function mkCard(p){
       ${p.type==='carpool'?`<div class="card-primary">${safe(p.departure||'出发地')} → ${safe(p.resort||'雪场')}</div><div class="card-subline">${[p.trip_date,formatTimeShort(p.depart_time)].filter(Boolean).map(safe).join(' · ')}</div><div class="card-chiprow">${[p.seats_left?`缺${p.seats_left}人`:'',p.cost_share].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
       ${p.type==='room'?`<div class="card-primary">${safe(ROOM_RESORTS[p.room_resort]||p.room_resort||'雪场')}</div><div class="card-subline">${safe(dateRange(p.checkin_date,p.checkout_date)||p.room_location||'住宿信息')}</div><div class="card-chiprow">${[p.room_location,p.room_budget?fmtPrice(p.room_budget)+'/晚':'',p.room_people?`缺${p.room_people}人`:'' ].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
       ${p.type==='secondhand'?`<div class="card-price">${fmtPrice(p.price)}</div><div class="card-subline">${safe(p.title||'')}</div><div class="card-chiprow">${[SECONDHAND_CATS[p.subcategory],SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`:''}
-      ${!['carpool','room','secondhand'].includes(p.type)?`<div class="card-title">${safe(p.title||'')}</div>`:''}
+      ${p.type==='post'?`<div class="card-primary">雪友圈</div><div class="card-community-title">${safe(p.title||'分享滑雪瞬间')}</div><div class="card-chiprow"><span class="mini-chip">社区分享</span>${p.created_at?`<span class="mini-chip">${safe(fmtTime(p.created_at))}</span>`:''}</div>`:''}
+      ${p.type==='news'?`<div class="card-primary">雪场动态</div><div class="card-news-headline">${safe(p.title||'雪场最新消息')}</div><div class="card-chiprow">${p.resort?`<span class="mini-chip">${safe(p.resort)}</span>`:''}<span class="mini-chip">实时更新</span>${p.created_at?`<span class="mini-chip">${safe(fmtTime(p.created_at))}</span>`:''}</div>`:''}
+      ${!['carpool','room','secondhand','post','news'].includes(p.type)?`<div class="card-title">${safe(p.title||'')}</div>`:''}
       <div class="card-desc">${safe(p.content||'')}</div>
       <div class="card-foot-row">
         <div class="card-foot" onclick="event.stopPropagation();openProfile('${p.user_id}','${jsStr(p.user_name||'雪友')}','${p.user_avatar||''}')" style="cursor:pointer">
