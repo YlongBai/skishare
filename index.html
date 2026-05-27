@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ski Share — 澳洲华人滑雪社区</title>
-<meta name="description" content="澳洲华人滑雪社区，雪友同行、拼房、二手雪具、雪场动态">
+<meta name="description" content="澳洲华人滑雪社区，拼车、拼房、二手雪具、雪场动态">
 <meta name="theme-color" content="#1E3A5F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -281,6 +281,7 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       </div>
     </div>
     <div id="secondhandCats" class="subcat-bar hidden"></div>
+    <div id="roomCats" class="subcat-bar hidden"></div>
     <div style="margin-top:10px" id="feedGrid"></div>
     <button class="load-more hidden" id="loadMoreBtn" onclick="loadMore()">加载更多</button>
     <div style="text-align:center;padding:16px 0 4px;font-size:12px;color:var(--muted)">
@@ -343,6 +344,9 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">价格（AUD）</label><input class="form-i" type="number" min="0" step="1" id="pubPrice" placeholder="例如 350"></div>
       <div class="form-g"><label class="form-l">新旧程度</label><select class="form-s" id="pubCondition"><option value="">选择新旧程度</option><option value="new">全新</option><option value="like_new">95新</option><option value="excellent">9新</option><option value="good">8新</option><option value="used">有使用痕迹</option><option value="other">其他</option></select></div>
       <div class="form-g"><label class="form-l">所在城市</label><select class="form-s" id="pubCity"><option value="">选择城市</option><option value="Sydney">Sydney</option><option value="Melbourne">Melbourne</option><option value="Canberra">Canberra</option><option value="Jindabyne">Jindabyne</option><option value="Brisbane">Brisbane</option><option value="Adelaide">Adelaide</option><option value="Perth">Perth</option><option value="Hobart">Hobart</option><option value="Other">其他</option></select></div>
+    </div>
+    <div id="roomF" class="hidden">
+      <div class="form-g"><label class="form-l">拼房地点</label><select class="form-s" id="pubRoomLocation"><option value="">选择住宿地点</option><option value="Jindabyne">Jindabyne</option><option value="East Jindabyne">East Jindabyne</option><option value="Cooma">Cooma</option><option value="Berridale">Berridale</option><option value="Crackenback">Crackenback</option><option value="Thredbo Village">Thredbo Village</option><option value="Bullocks Flat">Bullocks Flat</option><option value="Canberra">Canberra</option><option value="Other">其他</option></select></div>
     </div>
     <div id="locationF" class="hidden"><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
     <div id="contactF"><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
@@ -440,23 +444,24 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
-let me=null,curPg='home',curTab='all',curSecondhandCat='all',posts=[],offset=0,pgSize=10,more=false
+let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomLocation='all',posts=[],offset=0,pgSize=10,more=false
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
 let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
 const MAX_IMAGE_SIZE=10*1024*1024
 const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp']
 
 const SECONDHAND_CATS={snowboard:'单板',ski:'双板',clothing:'雪服',helmet:'头盔',goggles:'雪镜',boots:'雪鞋',bindings:'固定器',other:'其他'}
+const ROOM_LOCATIONS={'Jindabyne':'Jindabyne','East Jindabyne':'East Jindabyne','Cooma':'Cooma','Berridale':'Berridale','Crackenback':'Crackenback','Thredbo Village':'Thredbo Village','Bullocks Flat':'Bullocks Flat','Canberra':'Canberra','Other':'其他'}
 const SECONDHAND_CONDITIONS={new:'全新',like_new:'95新',excellent:'9新',good:'8新',used:'有使用痕迹',other:'其他'}
-const TABS=[{l:'推荐',v:'all'},{l:'雪友同行',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
-const TYPES=[{l:'雪友同行',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
+const TABS=[{l:'推荐',v:'all'},{l:'拼车',v:'carpool'},{l:'拼房',v:'room'},{l:'二手',v:'secondhand'},{l:'雪友圈',v:'post'},{l:'雪场动态',v:'news'}]
+const TYPES=[{l:'拼车',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v:'room',d:'分摊住宿',e:'🏠'},{l:'二手',v:'secondhand',d:'雪具交易',e:'🎿'},{l:'雪友圈',v:'post',d:'滑雪动态',e:'❄️'},{l:'雪场动态',v:'news',d:'分享实况',e:'🏔️'}]
 const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
 const EMOJI={carpool:'🚗',room:'🏠',secondhand:'🎿',post:'❄️',news:'🏔️'}
 
 ;(async()=>{
   const {data:{session}}=await db.auth.getSession()
   if(session){me=session.user;await loadMe();updateNav();checkUnread()}
-  renderTabs();renderSecondhandCats();renderTypes();renderImgGrid();loadPosts()
+  renderTabs();renderSecondhandCats();renderRoomCats();renderTypes();renderImgGrid();loadPosts()
   // 清空搜索框防止浏览器自动填充
   setTimeout(()=>{const s=document.getElementById('searchInput');if(s)s.value=''},100)
   db.auth.onAuthStateChange(async(_,s)=>{
@@ -485,7 +490,13 @@ function updateNav(){
 function renderTabs(){
   document.getElementById('tabsInner').innerHTML=TABS.map(t=>`<button class="tab ${t.v===curTab?'on':''}" onclick="chTab('${t.v}')">${t.l}</button>`).join('')
 }
-function chTab(v){curTab=v;if(v!=='secondhand')curSecondhandCat='all';offset=0;posts=[];renderTabs();renderSecondhandCats();loadPosts()}
+function chTab(v){
+  curTab=v
+  if(v!=='secondhand')curSecondhandCat='all'
+  if(v!=='room')curRoomLocation='all'
+  offset=0;posts=[]
+  renderTabs();renderSecondhandCats();renderRoomCats();loadPosts()
+}
 function renderSecondhandCats(){
   const el=document.getElementById('secondhandCats');if(!el)return
   el.classList.toggle('hidden',curTab!=='secondhand')
@@ -494,6 +505,14 @@ function renderSecondhandCats(){
   el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curSecondhandCat===v?'on':''}" onclick="chSecondhandCat('${v}')">${l}</button>`).join('')}</div>`
 }
 function chSecondhandCat(v){curSecondhandCat=v;offset=0;posts=[];renderSecondhandCats();loadPosts()}
+function renderRoomCats(){
+  const el=document.getElementById('roomCats');if(!el)return
+  el.classList.toggle('hidden',curTab!=='room')
+  if(curTab!=='room'){el.innerHTML='';return}
+  const cats=[['all','全部'],...Object.entries(ROOM_LOCATIONS)]
+  el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curRoomLocation===v?'on':''}" onclick="chRoomLocation('${v}')">${l}</button>`).join('')}</div>`
+}
+function chRoomLocation(v){curRoomLocation=v;offset=0;posts=[];renderRoomCats();loadPosts()}
 
 // LOAD POSTS
 async function loadPosts(){
@@ -512,6 +531,9 @@ async function loadPosts(){
     if(curTab==='secondhand'){
       q=q.eq('type','secondhand')
       if(curSecondhandCat&&curSecondhandCat!=='all')q=q.eq('subcategory',curSecondhandCat)
+    }else if(curTab==='room'){
+      q=q.eq('type','room')
+      if(curRoomLocation&&curRoomLocation!=='all')q=q.eq('room_location',curRoomLocation)
     }else{
       q=q.eq('type',curTab)
     }
@@ -547,6 +569,7 @@ function mkCard(p){
       ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
       ${p.type==='secondhand'&&p.subcategory?`<div class="card-tag">${SECONDHAND_CATS[p.subcategory]||'二手'}</div>`:''}
+      ${p.type==='room'&&p.room_location?`<div class="card-tag">${ROOM_LOCATIONS[p.room_location]||p.room_location}</div>`:''}
       ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
     </div>
     <div class="card-body">
@@ -802,7 +825,8 @@ function selType(v){
   pubType=v;renderTypes()
   document.getElementById('carpoolF').classList.toggle('hidden',v!=='carpool')
   document.getElementById('secondhandF').classList.toggle('hidden',v!=='secondhand')
-  document.getElementById('locationF').classList.toggle('hidden',v==='carpool')
+  document.getElementById('roomF').classList.toggle('hidden',v!=='room')
+  document.getElementById('locationF').classList.toggle('hidden',v==='carpool'||v==='room')
   document.getElementById('contactF').classList.toggle('hidden',v==='post'||v==='news')
 }
 function onImgSel(e){
@@ -872,10 +896,12 @@ async function submitPost(){
   const price=priceRaw===''?null:Number(priceRaw)
   const itemCondition=document.getElementById('pubCondition')?.value||''
   const city=document.getElementById('pubCity')?.value||''
+  const roomLocation=document.getElementById('pubRoomLocation')?.value||''
   if(pubType==='secondhand'&&!subcategory){showToast('请选择二手分类');return}
   if(pubType==='secondhand'&&(price===null||Number.isNaN(price)||price<0)){showToast('请输入有效价格');return}
   if(pubType==='secondhand'&&!itemCondition){showToast('请选择新旧程度');return}
   if(pubType==='secondhand'&&!city){showToast('请选择所在城市');return}
+  if(pubType==='room'&&!roomLocation){showToast('请选择拼房地点');return}
   for(const f of selImgs){
     if(!ALLOWED_IMAGE_TYPES.includes(f.type)||f.size>MAX_IMAGE_SIZE){showToast('图片格式或大小不符合要求');return}
   }
@@ -897,6 +923,7 @@ async function submitPost(){
       price:pubType==='secondhand'?price:null,
       item_condition:pubType==='secondhand'?itemCondition:null,
       city:pubType==='secondhand'?city:null,
+      room_location:pubType==='room'?roomLocation:null,
       contact:document.getElementById('pubContact')?.value.trim()||'',
       location:document.getElementById('pubLocation')?.value.trim()||'',
       resort:document.getElementById('pubResort')?.value||'',
@@ -914,6 +941,7 @@ async function submitPost(){
     const priceInput=document.getElementById('pubPrice');if(priceInput)priceInput.value=''
     const conditionInput=document.getElementById('pubCondition');if(conditionInput)conditionInput.value=''
     const cityInput=document.getElementById('pubCity');if(cityInput)cityInput.value=''
+    const roomLocationInput=document.getElementById('pubRoomLocation');if(roomLocationInput)roomLocationInput.value=''
     showPg('home');loadPosts()
   }catch(err){
     console.error(err)
