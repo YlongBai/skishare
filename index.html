@@ -52,6 +52,16 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .subcat-inner{display:flex;gap:6px;width:max-content;min-width:100%;padding:0 0 2px}
 .subcat{padding:6px 12px;border-radius:999px;border:1.5px solid rgba(30,58,95,.12);background:#fff;color:var(--navy);font-size:12px;font-weight:600;white-space:nowrap}
 .subcat.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filter-panel{margin:8px 2px 0;padding:10px;border-radius:14px;background:#fff;box-shadow:var(--sh)}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.filter-grid.three{grid-template-columns:1fr 1fr 1fr}
+.filter-i{width:100%;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(30,58,95,.1);background:var(--snow);font-family:'Noto Sans SC',sans-serif;font-size:12px;color:var(--text);outline:none}
+.filter-i:focus{border-color:var(--accent);background:#fff}
+.filter-actions{display:flex;gap:8px;margin-top:8px}
+.filter-btn{flex:1;padding:8px;border-radius:999px;border:1.5px solid rgba(30,58,95,.12);background:#fff;color:var(--navy);font-size:12px;font-weight:700}
+.filter-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.expired-badge{position:absolute;inset:0;background:rgba(15,25,35,.45);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;letter-spacing:.5px}
+.expired-card{opacity:.72}
 
 /* SEARCH */
 .search-bar{padding:8px 12px 0}
@@ -284,6 +294,8 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
     </div>
     <div id="secondhandCats" class="subcat-bar hidden"></div>
     <div id="roomCats" class="subcat-bar hidden"></div>
+    <div id="carpoolFilters" class="filter-panel hidden"></div>
+    <div id="roomFilters" class="filter-panel hidden"></div>
     <div style="margin-top:10px" id="feedGrid"></div>
     <button class="load-more hidden" id="loadMoreBtn" onclick="loadMore()">加载更多</button>
     <div style="text-align:center;padding:16px 0 4px;font-size:12px;color:var(--muted)">
@@ -456,6 +468,7 @@ const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
 let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=10,more=false
+let hideExpired=true
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
 let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
 const MAX_IMAGE_SIZE=10*1024*1024
@@ -474,7 +487,7 @@ const EMOJI={carpool:'🚗',room:'🏠',secondhand:'🎿',post:'❄️',news:'�
 ;(async()=>{
   const {data:{session}}=await db.auth.getSession()
   if(session){me=session.user;await loadMe();updateNav();checkUnread()}
-  renderTabs();renderSecondhandCats();renderRoomCats();renderTypes();renderImgGrid();loadPosts()
+  renderTabs();renderSecondhandCats();renderRoomCats();renderFilters();renderTypes();renderImgGrid();loadPosts()
   // 清空搜索框防止浏览器自动填充
   setTimeout(()=>{const s=document.getElementById('searchInput');if(s)s.value=''},100)
   db.auth.onAuthStateChange(async(_,s)=>{
@@ -508,7 +521,7 @@ function chTab(v){
   if(v!=='secondhand')curSecondhandCat='all'
   if(v!=='room')curRoomResort='all'
   offset=0;posts=[]
-  renderTabs();renderSecondhandCats();renderRoomCats();loadPosts()
+  renderTabs();renderSecondhandCats();renderRoomCats();renderFilters();loadPosts()
 }
 function renderSecondhandCats(){
   const el=document.getElementById('secondhandCats');if(!el)return
@@ -526,6 +539,42 @@ function renderRoomCats(){
   el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curRoomResort===v?'on':''}" onclick="chRoomResort('${v}')">${l}</button>`).join('')}</div>`
 }
 function chRoomResort(v){curRoomResort=v;offset=0;posts=[];renderRoomCats();loadPosts()}
+function renderFilters(){
+  const cf=document.getElementById('carpoolFilters')
+  const rf=document.getElementById('roomFilters')
+  if(cf){
+    cf.classList.toggle('hidden',curTab!=='carpool')
+    cf.innerHTML=curTab==='carpool'?`<div class="filter-grid">
+      <input class="filter-i" id="fltCarpoolFrom" placeholder="出发地，如 Sydney">
+      <select class="filter-i" id="fltCarpoolResort"><option value="">全部雪场</option><option>Perisher</option><option>Thredbo</option><option>Mt Buller</option><option>Falls Creek</option><option>Hotham</option><option>Ben Lomond</option><option>Other</option></select>
+      <input class="filter-i" type="date" id="fltCarpoolFromDate">
+      <input class="filter-i" type="date" id="fltCarpoolToDate">
+    </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">筛选</button><button class="filter-btn" onclick="clearFilters('carpool')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
+  }
+  if(rf){
+    rf.classList.toggle('hidden',curTab!=='room')
+    rf.innerHTML=curTab==='room'?`<div class="filter-grid">
+      <select class="filter-i" id="fltRoomResort"><option value="">全部雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select>
+      <input class="filter-i" id="fltRoomLocation" placeholder="住宿地，如 Jindabyne">
+      <input class="filter-i" type="date" id="fltRoomFromDate">
+      <input class="filter-i" type="number" min="0" id="fltRoomMaxBudget" placeholder="最高预算/晚">
+    </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">筛选</button><button class="filter-btn" onclick="clearFilters('room')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
+  }
+}
+function applyFilters(){offset=0;posts=[];loadPosts()}
+function clearFilters(type){
+  const ids=type==='carpool'?['fltCarpoolFrom','fltCarpoolResort','fltCarpoolFromDate','fltCarpoolToDate']:['fltRoomResort','fltRoomLocation','fltRoomFromDate','fltRoomMaxBudget']
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
+  offset=0;posts=[];loadPosts()
+}
+function toggleExpired(){hideExpired=!hideExpired;renderFilters();offset=0;posts=[];loadPosts()}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function isExpiredPost(p){
+  const today=todayISO()
+  if(p.type==='carpool'&&p.trip_date)return p.trip_date<today
+  if(p.type==='room'&&(p.checkout_date||p.checkin_date))return (p.checkout_date||p.checkin_date)<today
+  return false
+}
 
 // LOAD POSTS
 async function loadPosts(){
@@ -550,6 +599,30 @@ async function loadPosts(){
     }else{
       q=q.eq('type',curTab)
     }
+  }
+  if(curTab==='carpool'){
+    const from=document.getElementById('fltCarpoolFrom')?.value.trim()||''
+    const resort=document.getElementById('fltCarpoolResort')?.value||''
+    const d1=document.getElementById('fltCarpoolFromDate')?.value||''
+    const d2=document.getElementById('fltCarpoolToDate')?.value||''
+    q=q.eq('type','carpool')
+    if(from)q=q.ilike('departure',`%${from.replace(/[,%]/g,'').slice(0,50)}%`)
+    if(resort)q=q.eq('resort',resort)
+    if(d1)q=q.gte('trip_date',d1)
+    if(d2)q=q.lte('trip_date',d2)
+    if(hideExpired)q=q.gte('trip_date',todayISO())
+  }
+  if(curTab==='room'){
+    const resort=document.getElementById('fltRoomResort')?.value||''
+    const loc=document.getElementById('fltRoomLocation')?.value.trim()||''
+    const d1=document.getElementById('fltRoomFromDate')?.value||''
+    const maxBudget=document.getElementById('fltRoomMaxBudget')?.value||''
+    q=q.eq('type','room')
+    if(resort)q=q.eq('room_resort',resort)
+    if(loc)q=q.ilike('room_location',`%${loc.replace(/[,%]/g,'').slice(0,50)}%`)
+    if(d1)q=q.gte('checkin_date',d1)
+    if(maxBudget)q=q.lte('room_budget',Number(maxBudget))
+    if(hideExpired)q=q.gte('checkout_date',todayISO())
   }
   const{data,error}=await q.range(offset,offset+pgSize-1)
   if(error){
@@ -577,10 +650,12 @@ function renderPosts(){
 function mkCard(p){
   const cover=p.images&&p.images[0]
   const init=(p.user_name||'雪')[0]
-  return`<div class="card" onclick="openPost('${p.id}')">
+  const expired=isExpiredPost(p)
+  return`<div class="card ${expired?'expired-card':''}" onclick="openPost('${p.id}')">
     <div class="card-img-wrap">
       ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[p.type]||'bg-navy'}">${EMOJI[p.type]||'🎿'}</div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
+      ${expired?'<div class="expired-badge">已过期</div>':''}
       ${p.type==='secondhand'&&p.subcategory?`<div class="card-tag">${SECONDHAND_CATS[p.subcategory]||'二手'}</div>`:''}
       ${p.type==='room'&&p.room_resort?`<div class="card-tag">${ROOM_RESORTS[p.room_resort]||p.room_resort}</div>`:''}
       ${p.pinned?'<div class="card-pin">📌 置顶</div>':''}
@@ -638,6 +713,7 @@ async function openPost(id){
           ${canDelete?`<button class="btn btn-sm" style="background:rgba(232,74,74,.1);color:var(--red);border:none" onclick="delPost('${p.id}')">删除</button>`:''}
         </div>
       </div>
+      ${isExpiredPost(p)?`<div class="trip-box" style="background:rgba(232,74,74,.08)"><div class="trip-row" style="color:var(--red);font-weight:700">⚠️ 该信息已过期</div></div>`:''}
       ${p.type==='carpool'?`<div class="trip-box">
         ${p.trip_date?`<div class="trip-row">📅 ${safe(p.trip_date)}</div>`:''}
         ${p.depart_time?`<div class="trip-row">⏰ ${safe(formatTimeShort(p.depart_time))}</div>`:''}
