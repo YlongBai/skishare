@@ -317,6 +317,38 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .card-post .card-desc,.card-news .card-desc{-webkit-line-clamp:3!important;font-size:12px!important;line-height:1.55!important;color:#425466!important}
 .card-post .card-placeholder,.card-news .card-placeholder{font-size:44px;background:linear-gradient(135deg,var(--ice),#fff)!important}
 
+
+
+/* V13 EXPERIENCE POLISH */
+.pub-page{padding:62px 14px 24px;background:linear-gradient(180deg,#f7fbff 0%,var(--snow) 160px)}
+.pub-title{font-size:24px;margin-bottom:14px}
+.pub-intro{background:#fff;border:1px solid rgba(30,58,95,.08);box-shadow:var(--sh);border-radius:18px;padding:12px 14px;margin-bottom:12px;color:var(--muted);font-size:12px;line-height:1.6}
+.publish-section{background:#fff;border-radius:18px;box-shadow:var(--sh);padding:14px;margin:12px 0;border:1px solid rgba(30,58,95,.06)}
+.publish-section.hidden{display:none!important}
+.publish-section-title{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--navy);font-size:15px;margin-bottom:10px}
+.publish-section-sub{font-size:11px;color:var(--muted);font-weight:500;margin-left:auto}
+.publish-core{background:#fff;border-radius:18px;box-shadow:var(--sh);padding:14px;margin-bottom:12px;border:1px solid rgba(30,58,95,.06)}
+.type-grid{gap:9px}.type-card{background:#fff}.type-card.on{box-shadow:0 4px 16px rgba(30,58,95,.12)}
+.filter-panel{border:1px solid rgba(30,58,95,.06);background:rgba(255,255,255,.96);padding:12px;border-radius:18px}
+.filter-title{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;color:var(--navy);margin-bottom:9px}
+.filter-title span{font-size:11px;color:var(--muted);font-weight:500}
+.filter-grid{gap:9px}.filter-i{border-radius:999px;background:#fff;padding:9px 12px;box-shadow:0 1px 8px rgba(30,58,95,.04)}
+.filter-actions{gap:7px}.filter-btn{box-shadow:0 1px 8px rgba(30,58,95,.04)}
+.empty{margin:18px 10px;background:#fff;border-radius:20px;box-shadow:var(--sh);padding:34px 18px!important;border:1px solid rgba(30,58,95,.06)}
+.empty-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.empty-sub{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.empty-action{display:inline-flex;align-items:center;justify-content:center;border:none;background:var(--navy);color:#fff;border-radius:999px;padding:9px 15px;font-size:12px;font-weight:800;cursor:pointer}
+.detail-body{background:#fff;border-radius:22px 22px 0 0;margin-top:-10px;position:relative;padding-top:22px}
+.detail-title{font-size:23px;letter-spacing:-.4px}
+.trip-box{border:1px solid rgba(30,58,95,.06);box-shadow:0 2px 14px rgba(30,58,95,.06);background:linear-gradient(180deg,#f8fcff,#eef7ff)}
+.card-carpool + .detail-body .trip-box{background:linear-gradient(180deg,#f4fbff,#eaf6ff)}
+.detail-content{background:#fff;border-radius:16px;padding:4px 2px;font-size:15px}
+.action-row{position:sticky;bottom:72px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);padding:8px;border-radius:16px;z-index:8;box-shadow:0 2px 18px rgba(30,58,95,.08)}
+.act-btn{min-height:42px}
+.risk-box{background:#fff8e8!important;border:1px solid rgba(244,180,0,.24)!important;box-shadow:0 2px 14px rgba(244,180,0,.08)!important}
+.card{border:1px solid rgba(30,58,95,.04)}
+.card-desc{margin-top:7px}.card-social{font-weight:800;color:var(--muted)}
+
 </style>
 </head>
 <body>
@@ -404,10 +436,13 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 <div id="pg-publish" class="hidden">
   <div class="pub-page">
     <div class="pub-title">发布内容</div>
-    <div class="form-g"><label class="form-l">类型</label><div class="type-grid" id="typeGrid"></div></div>
-    <div class="form-g"><label class="form-l">标题</label><input class="form-i" id="pubTitle" placeholder="输入标题"></div>
-    <div class="form-g"><label class="form-l">详细内容</label><textarea class="form-t" id="pubContent" placeholder="分享更多详情..."></textarea></div>
-    <div id="carpoolF" class="hidden">
+    <div class="pub-intro">先选择发布类型，下面表单会自动切换。拼车、拼房、二手建议填写结构化信息，首页会直接展示重点。</div>
+    <div class="publish-core">
+      <div class="form-g"><label class="form-l">类型</label><div class="type-grid" id="typeGrid"></div></div>
+      <div class="form-g"><label class="form-l">标题</label><input class="form-i" id="pubTitle" placeholder="输入标题"></div>
+      <div class="form-g"><label class="form-l">详细内容</label><textarea class="form-t" id="pubContent" placeholder="分享更多详情..."></textarea></div>
+    </div>
+    <div id="carpoolF" class="publish-section hidden"><div class="publish-section-title">🚗 拼车信息 <span class="publish-section-sub">路线 / 时间 / 空位</span></div>
       <div class="form-g"><label class="form-l">出发日期</label><input class="form-i" type="date" id="pubDate"></div>
       <div class="form-g"><label class="form-l">出发时间</label><input class="form-i" type="time" id="pubDepartTime"></div>
       <div class="form-g"><label class="form-l">出发地</label><input class="form-i" id="pubDep" placeholder="例如 Sydney / Chatswood"></div>
@@ -415,13 +450,13 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">空位人数</label><input class="form-i" type="number" min="1" id="pubSeats" placeholder="例如 2"></div>
       <div class="form-g"><label class="form-l">费用分摊</label><input class="form-i" id="pubCostShare" placeholder="例如 AA油费 / $80 每人 / 免费"></div>
     </div>
-    <div id="secondhandF" class="hidden">
+    <div id="secondhandF" class="publish-section hidden"><div class="publish-section-title">🎿 二手信息 <span class="publish-section-sub">价格 / 成色 / 城市</span></div>
       <div class="form-g"><label class="form-l">二手分类</label><select class="form-s" id="pubSubcategory"><option value="">选择分类</option><option value="snowboard">单板</option><option value="ski">双板</option><option value="clothing">雪服</option><option value="helmet">头盔</option><option value="goggles">雪镜</option><option value="boots">雪鞋</option><option value="bindings">固定器</option><option value="other">其他</option></select></div>
       <div class="form-g"><label class="form-l">价格（AUD）</label><input class="form-i" type="number" min="0" step="1" id="pubPrice" placeholder="例如 350"></div>
       <div class="form-g"><label class="form-l">新旧程度</label><select class="form-s" id="pubCondition"><option value="">选择新旧程度</option><option value="new">全新</option><option value="like_new">95新</option><option value="excellent">9新</option><option value="good">8新</option><option value="used">有使用痕迹</option><option value="other">其他</option></select></div>
       <div class="form-g"><label class="form-l">所在城市</label><select class="form-s" id="pubCity"><option value="">选择城市</option><option value="Sydney">Sydney</option><option value="Melbourne">Melbourne</option><option value="Canberra">Canberra</option><option value="Jindabyne">Jindabyne</option><option value="Brisbane">Brisbane</option><option value="Adelaide">Adelaide</option><option value="Perth">Perth</option><option value="Hobart">Hobart</option><option value="Other">其他</option></select></div>
     </div>
-    <div id="roomF" class="hidden">
+    <div id="roomF" class="publish-section hidden"><div class="publish-section-title">🏠 拼房信息 <span class="publish-section-sub">雪场 / 日期 / 预算</span></div>
       <div class="form-g"><label class="form-l">目标雪场</label><select class="form-s" id="pubRoomResort"><option value="">选择雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select></div>
       <div class="form-g"><label class="form-l">住宿地点</label><input class="form-i" id="pubRoomLocation" placeholder="例如 Jindabyne / Cooma / Mansfield"></div>
       <div class="form-g"><label class="form-l">入住日期</label><input class="form-i" type="date" id="pubCheckin"></div>
@@ -431,12 +466,15 @@ button{font-family:'Noto Sans SC',sans-serif;cursor:pointer}
       <div class="form-g"><label class="form-l">性别偏好</label><select class="form-s" id="pubGenderPref"><option value="">无特殊偏好</option><option value="female">女生优先</option><option value="male">男生优先</option><option value="couple">情侣/两人优先</option><option value="any">不限</option></select></div>
       <div class="form-g"><label class="form-l">是否接受混住</label><select class="form-s" id="pubMixedOk"><option value="">请选择</option><option value="yes">接受混住</option><option value="no">不接受混住</option><option value="depends">看情况</option></select></div>
     </div>
-    <div id="locationF" class="hidden"><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
-    <div id="contactF"><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
-    <div class="form-g">
+    <div id="locationF" class="publish-section hidden"><div class="publish-section-title">📍 地点信息</div><div class="form-g"><label class="form-l">地点</label><input class="form-i" id="pubLocation" placeholder="地点"></div></div>
+    <div id="contactF" class="publish-section"><div class="publish-section-title">📮 联系方式</div><div class="form-g"><label class="form-l">联系方式</label><input class="form-i" id="pubContact" placeholder="微信、电话等"></div></div>
+    <div class="publish-section">
+      <div class="publish-section-title">🖼 图片 <span class="publish-section-sub">最多 3 张</span></div>
+      <div class="form-g">
       <label class="form-l">图片（最多3张）</label>
       <div class="img-grid" id="pubImgs"></div>
       <input type="file" id="pubImgIn" accept="image/*" multiple style="display:none" onchange="onImgSel(event)">
+      </div>
     </div>
     <button class="btn btn-p btn-full" id="pubBtn" onclick="submitPost()">发布内容</button>
   </div>
@@ -548,6 +586,8 @@ const EMOJI={carpool:'🚗',room:'🏠',secondhand:'🎿',post:'❄️',news:'�
   const {data:{session}}=await db.auth.getSession()
   if(session){me=session.user;await loadMe();updateNav();checkUnread()}
   renderTabs();renderSecondhandCats();renderRoomCats();renderFilters();renderTypes();renderImgGrid();loadPosts()
+  const sharedPostId=new URLSearchParams(location.search).get('post')
+  if(sharedPostId){setTimeout(()=>openPost(sharedPostId),500)}
   // 清空搜索框防止浏览器自动填充
   setTimeout(()=>{const s=document.getElementById('searchInput');if(s)s.value=''},100)
   db.auth.onAuthStateChange(async(_,s)=>{
@@ -604,21 +644,21 @@ function renderFilters(){
   const rf=document.getElementById('roomFilters')
   if(cf){
     cf.classList.toggle('hidden',curTab!=='carpool')
-    cf.innerHTML=curTab==='carpool'?`<div class="filter-grid">
+    cf.innerHTML=curTab==='carpool'?`<div class="filter-title">🚗 拼车筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-grid">
       <input class="filter-i" id="fltCarpoolFrom" placeholder="出发地，如 Sydney">
       <select class="filter-i" id="fltCarpoolResort"><option value="">全部雪场</option><option>Perisher</option><option>Thredbo</option><option>Mt Buller</option><option>Falls Creek</option><option>Hotham</option><option>Ben Lomond</option><option>Other</option></select>
       <input class="filter-i" type="date" id="fltCarpoolFromDate">
       <input class="filter-i" type="date" id="fltCarpoolToDate">
-    </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">筛选</button><button class="filter-btn" onclick="clearFilters('carpool')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
+    </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">应用筛选</button><button class="filter-btn" onclick="clearFilters('carpool')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
   }
   if(rf){
     rf.classList.toggle('hidden',curTab!=='room')
-    rf.innerHTML=curTab==='room'?`<div class="filter-grid">
+    rf.innerHTML=curTab==='room'?`<div class="filter-title">🏠 拼房筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-grid">
       <select class="filter-i" id="fltRoomResort"><option value="">全部雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select>
       <input class="filter-i" id="fltRoomLocation" placeholder="住宿地，如 Jindabyne">
       <input class="filter-i" type="date" id="fltRoomFromDate">
       <input class="filter-i" type="number" min="0" id="fltRoomMaxBudget" placeholder="最高预算/晚">
-    </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">筛选</button><button class="filter-btn" onclick="clearFilters('room')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
+    </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">应用筛选</button><button class="filter-btn" onclick="clearFilters('room')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
   }
 }
 function applyFilters(){offset=0;posts=[];loadPosts()}
@@ -700,9 +740,22 @@ async function loadPosts(){
 function loadMore(){offset+=pgSize;loadPosts()}
 function onSearch(){clearTimeout(searchTmr);searchTmr=setTimeout(()=>{offset=0;posts=[];loadPosts()},500)}
 
+
+function emptyState(){
+  const map={
+    carpool:['🚗','还没有拼车信息','发布第一个去雪场的车，可能很快就有人加入。','发布拼车'],
+    room:['🏠','还没有拼房信息','把雪场、日期和预算写清楚，匹配会快很多。','发布拼房'],
+    secondhand:['🎿','还没有二手装备','发一个雪板、雪鞋或雪服，二手区会更快热起来。','发布二手'],
+    post:['❄️','还没有雪友分享','晒一张雪场照片或训练记录，社区就有第一条动态。','发动态'],
+    news:['🏔️','还没有雪场动态','分享雪况、排队、路况或天气，会帮到很多雪友。','发雪况']
+  }
+  const m=map[curTab]||['🎿','暂无内容','换个分类或搜索词看看，也可以发布第一条内容。','发布内容']
+  return `<div class="empty"><div class="empty-icon">${m[0]}</div><div class="empty-title">${m[1]}</div><div class="empty-sub">${m[2]}</div><button class="empty-action" onclick="requireAuth(()=>showPg('publish'))">${m[3]}</button></div>`
+}
+
 function renderPosts(){
   const el=document.getElementById('feedGrid')
-  if(!posts.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎿</div>暂无内容</div>';return}
+  if(!posts.length){el.innerHTML=emptyState();return}
   const L=posts.filter((_,i)=>i%2===0),R=posts.filter((_,i)=>i%2!==0)
   el.innerHTML=`<div class="grid"><div class="col">${L.map(mkCard).join('')}</div><div class="col">${R.map(mkCard).join('')}</div></div>`
 }
@@ -1601,17 +1654,57 @@ function clearHistory(){
 }
 
 // ===== SHARE POST =====
+function getPostShareUrl(id){
+  const base=(location.origin&&location.origin!=='null')?location.origin:'https://skishare.com.au'
+  const path=(location.pathname&&location.pathname.endsWith('.html'))?location.pathname:'/'
+  return `${base}${path}?post=${encodeURIComponent(id)}`
+}
+
+function fallbackCopyText(text){
+  return new Promise((resolve,reject)=>{
+    try{
+      const ta=document.createElement('textarea')
+      ta.value=text
+      ta.setAttribute('readonly','')
+      ta.style.position='fixed'
+      ta.style.left='-9999px'
+      ta.style.top='-9999px'
+      document.body.appendChild(ta)
+      ta.focus()
+      ta.select()
+      const ok=document.execCommand('copy')
+      document.body.removeChild(ta)
+      ok?resolve():reject(new Error('copy failed'))
+    }catch(err){reject(err)}
+  })
+}
+
+async function copyShareUrl(url){
+  if(navigator.clipboard&&window.isSecureContext){
+    try{await navigator.clipboard.writeText(url);return true}catch(e){}
+  }
+  await fallbackCopyText(url)
+  return true
+}
+
 async function sharePost(id,title){
-  const url=`https://skishare.com.au?post=${encodeURIComponent(id)}`
+  const url=getPostShareUrl(id)
+  const text='Ski Share - '+String(title||'')
   try{
-    if(navigator.share){
-      await navigator.share({title:'Ski Share - '+String(title||''),url})
-    }else{
-      await navigator.clipboard.writeText(url)
-      showToast('链接已复制')
+    if(navigator.share&&window.isSecureContext){
+      await navigator.share({title:text,text,url})
+      return
     }
+    await copyShareUrl(url)
+    showToast('链接已复制')
   }catch(e){
-    if(e?.name!=='AbortError')showToast('分享失败')
+    if(e?.name==='AbortError')return
+    try{
+      await fallbackCopyText(url)
+      showToast('链接已复制')
+    }catch(err){
+      prompt('复制这个链接分享：',url)
+    }
   }
 }
 
