@@ -1516,7 +1516,7 @@ async function doAuth(){
     const{error}=await db.auth.signUp({email,password:pwd,options:{data:{name}}})
     if(error){showToast('注册失败：'+error.message);btn.textContent='注册';btn.disabled=false;return}
     showToast('注册成功！请查收验证邮件后登录')
-    authMode='login';toggleAuth();btn.textContent='登录';btn.disabled=false;return
+    setAuthMode('login');btn.textContent='登录';btn.disabled=false;return
   }
   btn.textContent=authMode==='login'?'登录':'注册';btn.disabled=false
   showToast('登录成功！')
