@@ -571,6 +571,175 @@ input[type="date"].filter-i{-webkit-appearance:none;appearance:none;font-size:11
   .filter-btn{font-size:11px!important;padding:0 6px!important}
 }
 
+
+
+/* V16 HOME CLEAN REDESIGN - Xiaohongshu style, less clutter */
+/* compact announcement */
+.official-module{margin:4px 0 8px!important;padding:0 2px!important}
+.official-card{border-radius:18px!important;padding:10px 12px!important;margin:0 0 8px!important;background:linear-gradient(135deg,#ffffff,#f4fbff)!important;box-shadow:0 2px 14px rgba(30,58,95,.055)!important}
+.official-top{margin-bottom:4px!important}
+.official-label{font-size:9px!important;padding:4px 8px!important;letter-spacing:.12em!important}
+.official-time{font-size:10px!important;font-weight:800!important;color:#8aa0b5!important}
+.official-title{font-size:13px!important;line-height:1.35!important;margin:0!important;color:var(--navy)!important;letter-spacing:-.15px!important}
+.official-points{display:block!important;margin-top:3px!important}
+.official-points span{display:none!important}
+.official-points span:first-child{display:block!important;background:transparent!important;border:none!important;padding:0!important;color:#64748b!important;font-size:11px!important;line-height:1.35!important;font-weight:600!important}
+
+/* clean feed cards */
+.feed{padding-left:12px!important;padding-right:12px!important;background:var(--snow)!important}
+.grid{gap:12px!important}
+.col{gap:12px!important}
+.card{border-radius:18px!important;box-shadow:0 3px 14px rgba(30,58,95,.07)!important;border:1px solid rgba(30,58,95,.045)!important;overflow:hidden!important;background:#fff!important}
+.card:active{transform:scale(.985)!important}
+.card-img{aspect-ratio:4/5!important;object-fit:cover!important;background:#edf3f8!important}
+.card-placeholder{aspect-ratio:4/5!important;min-height:0!important}
+.card-placeholder span{font-size:13px!important;letter-spacing:.06em!important}
+.card-body{padding:9px 9px 8px!important;background:#fff!important}
+.card-carpool .card-body,.card-room .card-body,.card-secondhand .card-body,.card-post .card-body,.card-news .card-body{background:#fff!important}
+.card-type-pill{font-size:9px!important;padding:3px 7px!important;margin-bottom:6px!important;letter-spacing:.08em!important;box-shadow:none!important}
+.card-primary,.card-price,.card-community-title,.card-news-headline{font-size:14px!important;line-height:1.25!important;letter-spacing:-.2px!important;margin:0 0 4px!important;color:#172033!important;font-weight:900!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.card-price{font-size:16px!important;color:#6d28d9!important;margin-bottom:3px!important}
+.card-subline{font-size:11px!important;line-height:1.35!important;color:#7a8fa6!important;font-weight:700!important;margin:0 0 5px!important;display:-webkit-box!important;-webkit-line-clamp:1!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.card-chiprow{gap:4px!important;margin:4px 0 5px!important;max-height:22px!important;overflow:hidden!important}
+.mini-chip{font-size:9.5px!important;padding:3px 6px!important;font-weight:800!important;background:#f3f6fa!important;color:#52677c!important;border:none!important;box-shadow:none!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.card-chiprow .mini-chip:nth-child(n+3){display:none!important}
+.card-desc{display:none!important}
+.card-foot-row{padding-top:7px!important;margin-top:7px!important;border-top:1px solid rgba(30,58,95,.055)!important}
+.uname{font-size:10px!important;color:#7a8fa6!important;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av-xs{width:18px!important;height:18px!important;font-size:9px!important}
+.card-social{gap:4px!important}
+.like-mini{font-size:10px!important;padding:3px 6px!important;background:#fff5f5!important;color:#d83a3a!important;box-shadow:none!important}
+.card-tag,.card-pin,.status-badge{font-size:9px!important;padding:3px 7px!important;border-radius:999px!important;background:rgba(15,25,35,.62)!important;backdrop-filter:blur(6px)!important}
+.card-pin{right:7px!important;top:7px!important}.card-tag{left:7px!important;top:7px!important}
+.status-badge{left:7px!important;bottom:7px!important}
+.card-sold,.expired-badge{font-size:12px!important;font-weight:900!important}
+
+/* lighter top search/filter spacing */
+.search-bar{padding:8px 12px 0!important}
+.search-input{height:42px!important;font-size:13px!important;box-shadow:0 1px 8px rgba(30,58,95,.035)!important}
+.subcat-bar{padding-top:6px!important;padding-bottom:8px!important}
+.filter-panel{margin-top:8px!important;border-radius:18px!important;box-shadow:0 3px 16px rgba(30,58,95,.055)!important}
+.empty{margin-top:12px!important;border-radius:22px!important}
+
+/* bottom nav less bulky */
+.bnav{height:62px!important;box-shadow:0 -2px 18px rgba(30,58,95,.06)!important}
+.bn.on{background:rgba(59,158,222,.10)!important;border-radius:18px!important;margin:6px 8px!important;flex:1!important}
+.bn svg{width:21px!important;height:21px!important}
+
+@media (max-width:380px){
+  .feed{padding-left:10px!important;padding-right:10px!important}
+  .grid{gap:10px!important}.col{gap:10px!important}
+  .card-body{padding:8px!important}
+  .card-primary,.card-price,.card-community-title,.card-news-headline{font-size:13px!important}
+}
+
+
+
+/* V16.1 TYPOGRAPHY SYSTEM — make every home card feel like one app */
+:root{
+  --font-ui:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Noto Sans SC",Arial,sans-serif;
+}
+body,button,input,textarea,select,.card,.detail,.pub-page,.filter-panel,.empty{
+  font-family:var(--font-ui)!important;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.logo{font-family:'Syne',var(--font-ui)!important}
+
+/* one title style for all post types */
+.card-primary,
+.card-price,
+.card-community-title,
+.card-news-headline{
+  font-family:var(--font-ui)!important;
+  font-size:15px!important;
+  font-weight:700!important;
+  line-height:1.36!important;
+  letter-spacing:-.01em!important;
+  color:#15243a!important;
+  margin:0 0 5px!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+.card-price{
+  color:#5f35d6!important;
+  font-size:15px!important;
+  font-weight:750!important;
+}
+.card-subline{
+  font-family:var(--font-ui)!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+  font-weight:500!important;
+  letter-spacing:0!important;
+  color:#687c90!important;
+  margin:0 0 6px!important;
+}
+.card-desc{
+  font-family:var(--font-ui)!important;
+  font-size:12px!important;
+  line-height:1.48!important;
+  font-weight:400!important;
+  color:#687c90!important;
+}
+.card-type-pill{
+  font-family:var(--font-ui)!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+  letter-spacing:.06em!important;
+  padding:3px 7px!important;
+  margin-bottom:7px!important;
+}
+.mini-chip{
+  font-family:var(--font-ui)!important;
+  font-size:10.5px!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+  padding:3px 7px!important;
+  line-height:1.15!important;
+}
+.uname,.card-social,.like-mini{
+  font-family:var(--font-ui)!important;
+  font-size:10.5px!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+}
+.like-mini{color:#d94848!important;background:#fff5f5!important}
+
+/* remove type-specific typography overrides; keep only subtle color chips */
+.card-post .card-primary,
+.card-news .card-primary,
+.card-post .card-community-title,
+.card-news .card-news-headline{
+  color:#15243a!important;
+}
+.card-secondhand .card-body,
+.card-room .card-body,
+.card-carpool .card-body,
+.card-post .card-body,
+.card-news .card-body{
+  background:#fff!important;
+}
+
+/* same card rhythm */
+.card-body{padding:10px 10px 9px!important}
+.card-chiprow{gap:4px!important;margin:5px 0 6px!important;max-height:23px!important}
+.card-foot-row{margin-top:8px!important;padding-top:8px!important}
+
+/* slightly softer global text */
+.official-title,.empty-title,.filter-title,.pub-title,.detail-title{
+  font-family:var(--font-ui)!important;
+  letter-spacing:-.015em!important;
+}
+
+@media (max-width:380px){
+  .card-primary,.card-price,.card-community-title,.card-news-headline{font-size:14px!important}
+  .card-subline{font-size:11.5px!important}
+  .mini-chip{font-size:10px!important}
+}
+
 </style>
 </head>
 <body>
@@ -808,7 +977,7 @@ const TYPES=[{l:'拼车',v:'carpool',d:'一起去雪场',e:'🚗'},{l:'拼房',v
 const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg-green',news:'bg-teal'}
 const EMOJI={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
 const TYPE_LABELS={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
-const OFFICIAL_NOTICE={label:'SKI SHARE',tag:'雪季提醒',title:'❄️ 澳洲雪季要回来啦！',points:['Perisher、Thredbo 已经开始热闹起来了','找搭子、拼车、拼房、收雪具的朋友，都可以提前开始发帖～','希望大家今年都能多追几场 powder 🎿']}
+const OFFICIAL_NOTICE={label:'SKI SHARE',tag:'雪季提醒',title:'❄️ 澳洲雪季要回来啦！',points:['找搭子、拼车、拼房、收雪具，都可以提前开始发帖～','Perisher、Thredbo 已经开始热闹起来了','希望大家今年都能多追几场 powder 🎿']}
 
 ;(async()=>{
   const {data:{session}}=await db.auth.getSession()
@@ -1041,9 +1210,9 @@ function mkCard(p){
       <div class="card-subline">${safe(p.title||'二手雪具')}</div>
       <div class="card-chiprow">${[SECONDHAND_CATS[p.subcategory],SECONDHAND_CONDITIONS[p.item_condition],p.city].filter(Boolean).map(x=>`<span class="mini-chip">${safe(x)}</span>`).join('')}</div>`
   }else if(type==='post'){
-    main=`<div class="card-primary">雪友圈</div><div class="card-community-title">${safe(p.title||'分享滑雪瞬间')}</div><div class="card-chiprow"><span class="mini-chip">社区分享</span>${p.created_at?`<span class="mini-chip">${safe(fmtTime(p.created_at))}</span>`:''}</div>`
+    main=`<div class="card-primary">${safe(p.title||'分享滑雪瞬间')}</div><div class="card-chiprow"><span class="mini-chip">社区分享</span>${p.created_at?`<span class="mini-chip">${safe(fmtTime(p.created_at))}</span>`:''}</div>`
   }else if(type==='news'){
-    main=`<div class="card-primary">雪场动态</div><div class="card-news-headline">${safe(p.title||'雪场最新消息')}</div><div class="card-chiprow">${p.resort?`<span class="mini-chip">${safe(p.resort)}</span>`:''}<span class="mini-chip">实时更新</span>${p.created_at?`<span class="mini-chip">${safe(fmtTime(p.created_at))}</span>`:''}</div>`
+    main=`<div class="card-primary">${safe(p.title||'雪场最新消息')}</div><div class="card-chiprow">${p.resort?`<span class="mini-chip">${safe(p.resort)}</span>`:''}<span class="mini-chip">实时更新</span>${p.created_at?`<span class="mini-chip">${safe(fmtTime(p.created_at))}</span>`:''}</div>`
   }else{
     main=`<div class="card-primary">${safe(p.title||'帖子')}</div>`
   }
