@@ -1611,16 +1611,59 @@ async function syncMyPublicSnapshot(){
   try{await db.from('notifications').update({sender_name:name,sender_avatar:avatar}).eq('sender_id',me.id)}catch(e){}
 }
 
+function compressAvatarImage(file){
+  return new Promise(resolve=>{
+    const img=new Image()
+    const url=URL.createObjectURL(file)
+    img.onload=()=>{
+      const SIZE=512
+      const side=Math.min(img.width,img.height)
+      const sx=Math.max(0,Math.round((img.width-side)/2))
+      const sy=Math.max(0,Math.round((img.height-side)/2))
+      const canvas=document.createElement('canvas')
+      canvas.width=SIZE;canvas.height=SIZE
+      const ctx=canvas.getContext('2d')
+      ctx.drawImage(img,sx,sy,side,side,0,0,SIZE,SIZE)
+      canvas.toBlob(blob=>{URL.revokeObjectURL(url);resolve(blob||file)},'image/jpeg',0.78)
+    }
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)}
+    img.src=url
+  })
+}
+
 async function uploadAvatar(e){
-  if(!me)return
-  const file=e.target.files[0];if(!file)return
-  showToast('上传中...')
-  const path=`avatars/${me.id}.${file.name.split('.').pop()}`
-  const{error}=await db.storage.from('images').upload(path,file,{contentType:file.type,upsert:true})
-  if(error){showToast('上传失败');return}
-  const{data:u}=db.storage.from('images').getPublicUrl(path)
-  await db.from('profiles').update({avatar:u.publicUrl}).eq('id',me.id)
-  await loadMe();await syncMyPublicSnapshot();showToast('头像已更新');renderMine()
+  if(!me){showPg('auth','login');return}
+  const input=e.target
+  const file=input.files&&input.files[0]
+  if(!file)return
+  if(!ALLOWED_IMAGE_TYPES.includes(file.type)){showToast('头像只支持 JPG/PNG/WebP');input.value='';return}
+  if(file.size>MAX_IMAGE_SIZE){showToast('头像图片不能超过10MB');input.value='';return}
+  const oldLabel=document.querySelector('.mine-edit-av')?.textContent||'点击更换头像'
+  const editLabel=document.querySelector('.mine-edit-av')
+  try{
+    if(editLabel)editLabel.textContent='头像处理中...'
+    showToast('头像处理中...')
+    const avatarBlob=await compressAvatarImage(file)
+    if(editLabel)editLabel.textContent='头像上传中...'
+    const path=`avatars/${me.id}/avatar.jpg`
+    const{error:uploadError}=await db.storage.from('images').upload(path,avatarBlob,{contentType:'image/jpeg',upsert:true,cacheControl:'60'})
+    if(uploadError){console.error(uploadError);showToast('头像上传失败：请检查 Storage 权限');return}
+    const{data:u}=db.storage.from('images').getPublicUrl(path)
+    const avatarUrl=`${u.publicUrl}?v=${Date.now()}`
+    const{error:profileError}=await db.from('profiles').update({avatar:avatarUrl}).eq('id',me.id)
+    if(profileError){console.error(profileError);showToast('头像保存失败：请检查 profiles 权限');return}
+    await loadMe()
+    await syncMyPublicSnapshot()
+    showToast('头像已更新')
+    renderMine()
+    loadPosts()
+  }catch(err){
+    console.error(err)
+    showToast('头像更新失败，请重试')
+  }finally{
+    input.value=''
+    if(editLabel)editLabel.textContent=oldLabel
+  }
 }
 
 async function editName(){
