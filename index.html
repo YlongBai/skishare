@@ -670,6 +670,7 @@ const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
 let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=10,more=false
+let listContext=null,prevListContext=null
 let hideExpired=true
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
 let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,prevPg='home'
@@ -722,6 +723,7 @@ function renderTabs(){
   document.getElementById('tabsInner').innerHTML=TABS.map(t=>`<button class="tab ${t.v===curTab?'on':''}" onclick="chTab('${t.v}')">${t.l}</button>`).join('')
 }
 function chTab(v){
+  listContext=null
   curTab=v
   if(v!=='secondhand')curSecondhandCat='all'
   if(v!=='room')curRoomResort='all'
@@ -947,7 +949,7 @@ function detailHero(p){
 }
 
 async function openPost(id){
-  prevPg=curPg;curPostId=id;showPg('detail')
+  prevPg=curPg;prevListContext=listContext;curPostId=id;showPg('detail')
   const el=document.getElementById('detailWrap')
   el.innerHTML='<div class="empty">加载中...</div>'
   const[{data:p},{data:cmts}]=await Promise.all([
@@ -1103,7 +1105,7 @@ function cancelReply(){replyId=null;replyName=null;document.getElementById('repl
 
 async function sendComment(){
   if(!me){showPg('auth','login');return}
-  if(!canDoAction('comment',20000)){showToast('评论太频繁，请稍后再试');return}
+  if(!canDoAction('comment',5000)){showToast('评论太频繁，请稍后再试');return}
   const txt=document.getElementById('cmtInput').value.trim()
   if(!txt)return
   if(txt.length>200){showToast('评论最多200字');return}
@@ -1386,7 +1388,7 @@ async function submitPost(){
     const roomResortInput=document.getElementById('pubRoomResort');if(roomResortInput)roomResortInput.value=''
     const roomLocationInput=document.getElementById('pubRoomLocation');if(roomLocationInput)roomLocationInput.value=''
     ;['pubDepartTime','pubCostShare','pubCheckin','pubCheckout','pubRoomPeople','pubRoomBudget','pubGenderPref','pubMixedOk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
-    showPg('home');loadPosts()
+    listContext=null;showPg('home');loadPosts()
   }catch(err){
     console.error(err)
     showToast('发布失败，请重试')
@@ -1397,16 +1399,19 @@ async function submitPost(){
 }
 
 // AUTH
-function toggleAuth(){
-  authMode=authMode==='login'?'register':'login'
+function setAuthMode(mode){
+  authMode=mode==='register'?'register':'login'
   const isL=authMode==='login'
   document.getElementById('authTitle').textContent=isL?'欢迎回来':'创建账号'
   document.getElementById('authSub').textContent=isL?'登录你的 Ski Share 账号':'加入澳洲华人滑雪社区'
   document.getElementById('authBtn').textContent=isL?'登录':'注册'
   document.getElementById('authTogTxt').textContent=isL?'还没有账号？':'已有账号？'
   document.getElementById('authTogBtn').textContent=isL?'注册':'登录'
-  document.getElementById('forgotLink').classList.toggle('hidden',authMode==='register')
+  document.getElementById('forgotLink').classList.toggle('hidden',!isL)
   document.getElementById('authNameG').classList.toggle('hidden',isL)
+}
+function toggleAuth(){
+  setAuthMode(authMode==='login'?'register':'login')
 }
 function maskEmail(email){
   if(!email)return''
@@ -1611,19 +1616,21 @@ async function editName(){
 }
 
 async function myPosts(){
+  listContext='myPosts'
   const{data}=await db.from('posts').select('*').eq('user_id',me.id).order('created_at',{ascending:false})
   posts=data||[];offset=0;more=false;renderPosts();showPg('home')
   document.getElementById('searchInput').value='我的帖子'
 }
 async function myFavs(){
+  listContext='myFavs'
   const{data}=await db.from('favorites').select('post_id').eq('user_id',me.id)
-  if(!data||!data.length){showToast('暂无收藏');return}
+  if(!data||!data.length){listContext=null;showToast('暂无收藏');return}
   const ids=data.map(f=>f.post_id)
   const{data:fp}=await db.from('posts').select('*').in('id',ids)
   posts=fp||[];renderPosts();showPg('home')
   document.getElementById('searchInput').value='我的收藏'
 }
-async function signOut(){await db.auth.signOut();me=null;updateNav();showPg('home');showToast('已退出登录')}
+async function signOut(){await db.auth.signOut();me=null;listContext=null;prevListContext=null;updateNav();showPg('home');showToast('已退出登录')}
 
 // PROFILE PAGE
 async function openProfile(uid,name,avatar){
@@ -1658,12 +1665,19 @@ function showPg(pg,mode){
   if(pg==='admin')loadAdminReports()
   if(pg==='mine')renderMine()
   if(pg==='publish'){selImgs=[];renderImgGrid();selType('post')}
-  if(pg==='auth'){authMode='login';if(mode==='register'){authMode='register';toggleAuth()}else{document.getElementById('authTitle').textContent='欢迎回来';document.getElementById('authSub').textContent='登录你的 Ski Share 账号';document.getElementById('authBtn').textContent='登录';document.getElementById('authTogTxt').textContent='还没有账号？';document.getElementById('authTogBtn').textContent='注册';document.getElementById('authNameG').classList.add('hidden')}}
+  if(pg==='auth')setAuthMode(mode==='register'?'register':'login')
   window.scrollTo(0,0)
 }
 
 function goBack(){
-  document.getElementById('searchInput').value=''
+  const input=document.getElementById('searchInput')
+  if(prevPg==='home'&&prevListContext){
+    showPg('home')
+    if(input)input.value=prevListContext==='myPosts'?'我的帖子':'我的收藏'
+    return
+  }
+  if(input)input.value=''
+  listContext=null
   showPg(prevPg||'home')
 }
 function requireAuth(fn){if(!me){showPg('auth','login');return}fn()}
