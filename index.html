@@ -1607,7 +1607,7 @@ function compressImage(file){
     const img=new Image()
     const url=URL.createObjectURL(file)
     img.onload=()=>{
-      const MAX=720
+      const MAX=640
       let w=img.width,h=img.height
       if(w>MAX||h>MAX){
         if(w>=h){h=Math.round(h*MAX/w);w=MAX}
@@ -1616,7 +1616,7 @@ function compressImage(file){
       const canvas=document.createElement('canvas')
       canvas.width=w;canvas.height=h
       canvas.getContext('2d').drawImage(img,0,0,w,h)
-      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.58)
+      canvas.toBlob(blob=>resolve(blob||file),'image/jpeg',0.50)
       URL.revokeObjectURL(url)
     }
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)}
@@ -1624,12 +1624,21 @@ function compressImage(file){
   })
 }
 
+function withTimeout(promise, ms, message){
+  let timer
+  const timeout=new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(new Error(message||'上传超时，请换网络后重试')),ms)
+  })
+  return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer))
+}
+
 async function uploadOneImage(file,index,total,onProgress){
   onProgress&&onProgress(`压缩图片 ${index+1}/${total}...`)
   const compressed=await compressImage(file)
   onProgress&&onProgress(`上传图片 ${index+1}/${total}...`)
   const path=`posts/${Date.now()}-${index}-${Math.random().toString(36).slice(2)}.jpg`
-  const{error}=await db.storage.from('images').upload(path,compressed,{contentType:'image/jpeg',upsert:false})
+  const uploadTask=db.storage.from('images').upload(path,compressed,{contentType:'image/jpeg',cacheControl:'3600',upsert:false})
+  const{error}=await withTimeout(uploadTask,45000,'图片上传超时，请换网络后重试')
   if(error)throw error
   const{data:u}=db.storage.from('images').getPublicUrl(path)
   return u.publicUrl
@@ -1734,15 +1743,12 @@ async function submitPost(){
   btn.disabled=true
 
   try{
-    let finishedUploads=0
-    const urls=selImgs.length
-      ? await Promise.all(selImgs.map(async(file,i)=>{
-          const url=await uploadOneImage(file,i,selImgs.length,msg=>{btn.textContent=msg})
-          finishedUploads++
-          btn.textContent=`图片上传完成 ${finishedUploads}/${selImgs.length}...`
-          return url
-        }))
-      : []
+    const urls=[]
+    for(let i=0;i<selImgs.length;i++){
+      const url=await uploadOneImage(selImgs[i],i,selImgs.length,msg=>{btn.textContent=msg})
+      urls.push(url)
+      btn.textContent=`图片上传完成 ${i+1}/${selImgs.length}...`
+    }
 
     btn.textContent='保存帖子中...'
     const{data:newPost,error}=await db.from('posts').insert({
