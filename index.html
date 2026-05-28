@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ski Share — 澳洲华人滑雪社区</title>
+<meta name="app-version" content="v16-stability-lite">
 <meta name="description" content="澳洲华人滑雪社区，拼车、拼房、二手雪具、雪场动态">
 <meta name="theme-color" content="#1E3A5F">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -740,6 +741,16 @@ body,button,input,textarea,select,.card,.detail,.pub-page,.filter-panel,.empty{
   .mini-chip{font-size:10px!important}
 }
 
+
+
+/* V16 STABILITY LITE: smoother, less blocking */
+.card{animation:none!important}
+.skel{position:relative;overflow:hidden;background:#e8eef4!important}
+.skel::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:skelShimmer 1.2s infinite}
+@keyframes skelShimmer{100%{transform:translateX(100%)}}
+.load-more:disabled,.btn:disabled{opacity:.65;cursor:not-allowed}
+.card-img{content-visibility:auto}
+
 </style>
 </head>
 <body>
@@ -959,8 +970,8 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
-let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=10,more=false
-let listContext=null,prevListContext=null,pendingAuthAction=null
+let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=6,more=false
+let listContext=null,prevListContext=null,pendingAuthAction=null,loadSeq=0,isLoadingPosts=false
 let hideExpired=true
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
 let authMode='login',sliderIdx=0,viewerImgs=[],viewerIdx=0,viewerTouchX=0,prevPg='home'
@@ -978,6 +989,8 @@ const COLORS={carpool:'bg-blue',room:'bg-yellow',secondhand:'bg-purple',post:'bg
 const EMOJI={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
 const TYPE_LABELS={carpool:'拼车',room:'拼房',secondhand:'二手',post:'雪友圈',news:'雪场动态'}
 const OFFICIAL_NOTICE={label:'SKI SHARE',tag:'雪季提醒',title:'❄️ 澳洲雪季要回来啦！',points:['找搭子、拼车、拼房、收雪具，都可以提前开始发帖～','Perisher、Thredbo 已经开始热闹起来了','希望大家今年都能多追几场 powder 🎿']}
+const APP_VERSION='v16-stability-lite-20260528'
+console.log('SkiShare',APP_VERSION)
 
 ;(async()=>{
   const {data:{session}}=await db.auth.getSession()
@@ -1100,11 +1113,16 @@ function renderOfficialModule(){
 
 // LOAD POSTS
 async function loadPosts(){
+  const seq=++loadSeq
+  if(isLoadingPosts&&offset!==0)return
+  isLoadingPosts=true
   const el=document.getElementById('feedGrid')
+  const btn=document.getElementById('loadMoreBtn')
   const kw=document.getElementById('searchInput')?.value.trim()||''
   renderOfficialModule()
+  if(btn)btn.disabled=true
   if(offset===0){
-    const col=Array(3).fill(`<div class="skel-card"><div class="skel skel-img"></div><div class="skel skel-line"></div><div class="skel skel-line short"></div></div>`).join('')
+    const col=Array(2).fill(`<div class="skel-card"><div class="skel skel-img"></div><div class="skel skel-line"></div><div class="skel skel-line short"></div></div>`).join('')
     el.innerHTML=`<div class="grid"><div class="col">${col}</div><div class="col">${col}</div></div>`
   }
   let q=db.from('posts').select('*').order('pinned',{ascending:false}).order('created_at',{ascending:false})
@@ -1147,20 +1165,26 @@ async function loadPosts(){
     if(maxBudget)q=q.lte('room_budget',Number(maxBudget))
     if(hideExpired)q=q.gte('checkout_date',todayISO())
   }
-  const{data,error}=await q.range(offset,offset+pgSize-1)
-  if(error){
+  try{
+    const{data,error}=await withTimeout(q.range(offset,offset+pgSize-1),12000,'加载超时，请检查网络后重试')
+    if(seq!==loadSeq)return
+    if(error)throw error
+    const rows=data||[]
+    if(offset===0)posts=rows;else posts=[...posts,...rows]
+    more=rows.length===pgSize
+    document.getElementById('loadMoreBtn').classList.toggle('hidden',!more)
+    renderPosts()
+  }catch(error){
+    if(seq!==loadSeq)return
     console.error(error)
-    el.innerHTML='<div class="empty"><div class="empty-icon">!</div><div class="empty-title">加载失败</div><div class="empty-sub">网络或权限暂时不可用，可以重新试一次。</div><button class="empty-action" onclick="loadPosts()">重新加载</button></div>'
+    el.innerHTML='<div class="empty"><div class="empty-icon">!</div><div class="empty-title">加载失败</div><div class="empty-sub">网络可能不稳定，先少量加载，点下面再试一次。</div><button class="empty-action" onclick="retryLoadPosts()">重新加载</button></div>'
     document.getElementById('loadMoreBtn').classList.add('hidden')
-    return
+  }finally{
+    if(seq===loadSeq){isLoadingPosts=false;if(btn)btn.disabled=false}
   }
-  const rows=data||[]
-  if(offset===0)posts=rows;else posts=[...posts,...rows]
-  more=rows.length===pgSize
-  document.getElementById('loadMoreBtn').classList.toggle('hidden',!more)
-  renderPosts()
 }
-function loadMore(){offset+=pgSize;loadPosts()}
+function retryLoadPosts(){offset=0;posts=[];loadPosts()}
+function loadMore(){if(isLoadingPosts)return;offset+=pgSize;loadPosts()}
 function onSearch(){clearTimeout(searchTmr);searchTmr=setTimeout(()=>{offset=0;posts=[];renderOfficialModule();loadPosts()},500)}
 
 
@@ -1218,7 +1242,7 @@ function mkCard(p){
   }
   return`<div class="card card-${type} ${expired?'expired-card':''}" onclick="openPost('${p.id}')">
     <div class="card-img-wrap">
-      ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[type]||'bg-navy'}"><span>${safe(TYPE_LABELS[type]||'SKI SHARE')}</span></div>`}
+      ${urlOk(cover)?`<img class="card-img" src="${urlOk(cover)}" loading="lazy" decoding="async" alt="帖子图片">`:`<div class="card-placeholder ${COLORS[type]||'bg-navy'}"><span>${safe(TYPE_LABELS[type]||'SKI SHARE')}</span></div>`}
       ${p.sold?'<div class="card-sold">已售出</div>':''}
       ${expired?'<div class="expired-badge">已过期</div>':''}
       ${postStatusLabel(p)?`<div class="status-badge">${postStatusLabel(p)}</div>`:''}
@@ -1268,10 +1292,18 @@ async function openPost(id){
   prevPg=curPg;prevListContext=listContext;curPostId=id;showPg('detail')
   const el=document.getElementById('detailWrap')
   el.innerHTML='<div class="empty">加载中...</div>'
-  const[{data:p},{data:cmts}]=await Promise.all([
-    db.from('posts').select('*').eq('id',id).single(),
-    db.from('comments').select('*').eq('post_id',id).order('created_at',{ascending:true})
-  ])
+  let detailData
+  try{
+    detailData=await withTimeout(Promise.all([
+      db.from('posts').select('*').eq('id',id).single(),
+      db.from('comments').select('*').eq('post_id',id).order('created_at',{ascending:true})
+    ]),15000,'帖子加载超时')
+  }catch(err){
+    console.error(err)
+    el.innerHTML='<div class="empty"><div class="empty-title">帖子加载失败</div><div class="empty-sub">网络可能不稳定，请稍后重试。</div><button class="empty-action" onclick="openPost(\''+id+'\')">重新加载</button></div>'
+    return
+  }
+  const[{data:p},{data:cmts}]=detailData
   if(!p){el.innerHTML='<div class="empty">帖子不存在</div>';return}
   let isFav=false, isLiked=false
   if(me){
