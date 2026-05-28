@@ -751,6 +751,15 @@ body,button,input,textarea,select,.card,.detail,.pub-page,.filter-panel,.empty{
 .load-more:disabled,.btn:disabled{opacity:.65;cursor:not-allowed}
 .card-img{content-visibility:auto}
 
+
+/* V17 supply/demand filter chips */
+.kind-bar{padding:0 0 10px!important;margin:0!important}
+.kind-bar .subcat-inner{padding:0!important}
+.filter-form{display:flex;flex-direction:column;gap:8px}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.filter-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.filter-label{font-size:11px;font-weight:800;color:var(--muted);padding-left:4px}
+@media (max-width:380px){.filter-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -972,7 +981,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const {createClient}=supabase
 const db=createClient(SB_URL,SB_KEY)
 
-let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',posts=[],offset=0,pgSize=6,more=false
+let me=null,curPg='home',curTab='all',curSecondhandCat='all',curRoomResort='all',curCarpoolKind='all',curRoomKind='all',posts=[],offset=0,pgSize=6,more=false
 let listContext=null,prevListContext=null,pendingAuthAction=null,loadSeq=0,isLoadingPosts=false
 let hideExpired=true
 let searchTmr=null,curPostId=null,replyId=null,replyName=null,selImgs=[],pubType='post'
@@ -1034,7 +1043,8 @@ function chTab(v){
   listContext=null
   curTab=v
   if(v!=='secondhand')curSecondhandCat='all'
-  if(v!=='room')curRoomResort='all'
+  if(v!=='room'){curRoomResort='all';curRoomKind='all'}
+  if(v!=='carpool')curCarpoolKind='all'
   offset=0;posts=[]
   renderTabs();renderSecondhandCats();renderRoomCats();renderFilters();loadPosts()
 }
@@ -1054,12 +1064,19 @@ function renderRoomCats(){
   el.innerHTML=`<div class="subcat-inner">${cats.map(([v,l])=>`<button class="subcat ${curRoomResort===v?'on':''}" onclick="chRoomResort('${v}')">${l}</button>`).join('')}</div>`
 }
 function chRoomResort(v){curRoomResort=v;offset=0;posts=[];renderRoomCats();loadPosts()}
+function kindChip(label,value,current,fn){
+  return `<button class="subcat ${current===value?'on':''}" onclick="${fn}('${value}')">${label}</button>`
+}
 function renderFilters(){
   const cf=document.getElementById('carpoolFilters')
   const rf=document.getElementById('roomFilters')
   if(cf){
     cf.classList.toggle('hidden',curTab!=='carpool')
-    cf.innerHTML=curTab==='carpool'?`<div class="filter-title">拼车筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-form">
+    cf.innerHTML=curTab==='carpool'?`<div class="filter-title">拼车筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div>
+      <div class="subcat-bar kind-bar"><div class="subcat-inner">
+        ${kindChip('全部','all',curCarpoolKind,'chCarpoolKind')}${kindChip('有车找人','offer',curCarpoolKind,'chCarpoolKind')}${kindChip('找车求带','request',curCarpoolKind,'chCarpoolKind')}
+      </div></div>
+      <div class="filter-form">
       <div class="filter-row">
         <label class="filter-field"><span class="filter-label">出发地</span><input class="filter-i" id="fltCarpoolFrom" placeholder="Sydney / Chatswood"></label>
         <label class="filter-field"><span class="filter-label">目的雪场</span><select class="filter-i" id="fltCarpoolResort"><option value="">全部雪场</option><option>Perisher</option><option>Thredbo</option><option>Mt Buller</option><option>Falls Creek</option><option>Hotham</option><option>Ben Lomond</option><option>Other</option></select></label>
@@ -1072,7 +1089,11 @@ function renderFilters(){
   }
   if(rf){
     rf.classList.toggle('hidden',curTab!=='room')
-    rf.innerHTML=curTab==='room'?`<div class="filter-title">拼房筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div><div class="filter-form">
+    rf.innerHTML=curTab==='room'?`<div class="filter-title">拼房筛选 <span>${hideExpired?'已隐藏过期':'包含过期'}</span></div>
+      <div class="subcat-bar kind-bar"><div class="subcat-inner">
+        ${kindChip('全部','all',curRoomKind,'chRoomKind')}${kindChip('有房找人','offer',curRoomKind,'chRoomKind')}${kindChip('找房求拼','request',curRoomKind,'chRoomKind')}
+      </div></div>
+      <div class="filter-form">
       <div class="filter-row">
         <label class="filter-field"><span class="filter-label">目标雪场</span><select class="filter-i" id="fltRoomResort"><option value="">全部雪场</option><option value="Perisher">Perisher</option><option value="Thredbo">Thredbo</option><option value="Mt Buller">Mt Buller</option><option value="Falls Creek">Falls Creek</option><option value="Hotham">Hotham</option><option value="Ben Lomond">Ben Lomond</option><option value="Other">其他</option></select></label>
         <label class="filter-field"><span class="filter-label">住宿地点</span><input class="filter-i" id="fltRoomLocation" placeholder="Jindabyne / Cooma"></label>
@@ -1084,6 +1105,8 @@ function renderFilters(){
     </div><div class="filter-actions"><button class="filter-btn primary" onclick="applyFilters()">应用筛选</button><button class="filter-btn" onclick="clearFilters('room')">重置</button><button class="filter-btn" onclick="toggleExpired()">${hideExpired?'显示过期':'隐藏过期'}</button></div>`:''
   }
 }
+function chCarpoolKind(v){curCarpoolKind=v;offset=0;posts=[];renderFilters();loadPosts()}
+function chRoomKind(v){curRoomKind=v;offset=0;posts=[];renderFilters();loadPosts()}
 function applyFilters(){offset=0;posts=[];loadPosts()}
 function clearFilters(type){
   const ids=type==='carpool'?['fltCarpoolFrom','fltCarpoolResort','fltCarpoolFromDate','fltCarpoolToDate']:['fltRoomResort','fltRoomLocation','fltRoomFromDate','fltRoomMaxBudget']
@@ -1153,6 +1176,7 @@ async function loadPosts(){
     q=q.eq('type','carpool')
     if(from)q=q.ilike('departure',`%${from.replace(/[,%]/g,'').slice(0,50)}%`)
     if(resort)q=q.eq('resort',resort)
+    if(curCarpoolKind&&curCarpoolKind!=='all')q=q.eq('carpool_kind',curCarpoolKind)
     if(d1)q=q.gte('trip_date',d1)
     if(d2)q=q.lte('trip_date',d2)
     if(hideExpired)q=q.gte('trip_date',todayISO())
@@ -1167,6 +1191,7 @@ async function loadPosts(){
     if(loc)q=q.ilike('room_location',`%${loc.replace(/[,%]/g,'').slice(0,50)}%`)
     if(d1)q=q.gte('checkin_date',d1)
     if(maxBudget)q=q.lte('room_budget',Number(maxBudget))
+    if(curRoomKind&&curRoomKind!=='all')q=q.eq('room_kind',curRoomKind)
     if(hideExpired)q=q.gte('checkout_date',todayISO())
   }
   try{
@@ -1193,9 +1218,19 @@ function onSearch(){clearTimeout(searchTmr);searchTmr=setTimeout(()=>{offset=0;p
 
 
 function emptyState(){
+  const carpoolEmpty=curCarpoolKind==='request'
+    ? ['拼车','还没有找车求带','发一个找车帖子，说清楚出发地、人数和时间。','发找车']
+    : curCarpoolKind==='offer'
+      ? ['拼车','还没有有车找人','有空位可以发出来，可能很快就有人加入。','发拼车']
+      : ['拼车','还没有拼车信息','可以发布有车找人，也可以发找车求带。','发布拼车']
+  const roomEmpty=curRoomKind==='request'
+    ? ['拼房','还没有找房求拼','发一个找房帖子，说清楚雪场、日期和预算。','发找房']
+    : curRoomKind==='offer'
+      ? ['拼房','还没有有房找人','有空床位可以发出来，匹配会更快。','发拼房']
+      : ['拼房','还没有拼房信息','可以发布有房找人，也可以发找房求拼。','发布拼房']
   const map={
-    carpool:['拼车','还没有拼车信息','发布第一个去雪场的车，可能很快就有人加入。','发布拼车'],
-    room:['拼房','还没有拼房信息','把雪场、日期和预算写清楚，匹配会快很多。','发布拼房'],
+    carpool:carpoolEmpty,
+    room:roomEmpty,
     secondhand:['二手','还没有二手装备','发一个雪板、雪鞋或雪服，二手区会更快热起来。','发布二手'],
     post:['雪友圈','还没有雪友分享','晒一张雪场照片或训练记录，社区就有第一条动态。','发动态'],
     news:['雪况','还没有雪场动态','分享雪况、排队、路况或天气，会帮到很多雪友。','发雪况']
