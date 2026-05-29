@@ -1900,7 +1900,7 @@ function updateAiRiskPanel(){
 
 async function submitPost(){
   if(!me)return requireAuth(()=>showPg('publish'))
-  if(!canDoAction('post',60000)){showToast('发布太频繁，请稍后再试');return}
+  if(!canDoAction('post',5000)){showToast('发布太频繁，请稍后再试');return}
   const title=document.getElementById('pubTitle').value.trim()
   if(!title){showToast('请输入标题');return}
   if(title.length>60){showToast('标题最多60字');return}
